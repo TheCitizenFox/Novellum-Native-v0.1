@@ -1,0 +1,6 @@
+{
+  "name": "Novellum",
+  "description": "A durable, native Android writing app focused on manuscript safety and tablet-first workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

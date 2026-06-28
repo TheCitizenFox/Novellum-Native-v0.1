@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
             childColumns = ["projectId"]
         )
     ],
-    indices = [Index("projectId")]
+    indices = [Index("projectId")] // CASCADE delete removed for authored content
 )
 data class ChapterEntity(
     @PrimaryKey val id: String,

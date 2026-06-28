@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
             childColumns = ["chapterId"]
         )
     ],
-    indices = [Index("chapterId")]
+    indices = [Index("chapterId")] // CASCADE delete removed for authored content
 )
 data class SceneEntity(
     @PrimaryKey val id: String,

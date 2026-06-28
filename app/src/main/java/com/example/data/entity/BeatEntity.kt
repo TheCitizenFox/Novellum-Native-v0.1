@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
             childColumns = ["sceneId"]
         )
     ],
-    indices = [Index("sceneId")]
+    indices = [Index("sceneId")] // CASCADE delete removed for authored content
 )
 data class BeatEntity(
     @PrimaryKey val id: String,

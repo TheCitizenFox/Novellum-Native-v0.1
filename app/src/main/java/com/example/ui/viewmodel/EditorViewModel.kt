@@ -56,9 +56,21 @@ class EditorViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    private val _uiMessage = MutableStateFlow<String?>(null)
+    val uiMessage = _uiMessage.asStateFlow()
+
     fun selectProject(projectId: String) {
         _selectedProjectId.value = projectId
         _selectedSceneId.value = null
+    }
+
+    fun clearProjectSelection() {
+        _selectedProjectId.value = null
+        _selectedSceneId.value = null
+    }
+
+    fun clearUiMessage() {
+        _uiMessage.value = null
     }
 
     fun selectScene(sceneId: String) {
@@ -92,7 +104,7 @@ class EditorViewModel(
             } catch (e: IllegalStateException) {
                 // Handle programmatic empty overwrite rejection
                 e.printStackTrace()
-                // In a real app we'd surface this to the UI
+                _uiMessage.value = e.message ?: "Failed to save scene: Safety rejection."
             }
         }
     }

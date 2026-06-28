@@ -32,6 +32,10 @@ import com.example.data.entity.ProjectEntity
 import com.example.data.entity.SceneEntity
 import com.example.ui.viewmodel.EditorViewModel
 
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorShellScreen(viewModel: EditorViewModel) {
@@ -41,11 +45,22 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
     val projectScenes by viewModel.projectScenes.collectAsStateWithLifecycle()
     val selectedSceneId by viewModel.selectedSceneId.collectAsStateWithLifecycle()
     val currentScene by viewModel.currentScene.collectAsStateWithLifecycle()
+    val uiMessage by viewModel.uiMessage.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearUiMessage()
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Novellum") })
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Row(
             modifier = Modifier
@@ -77,7 +92,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                         }
                     }
                 } else {
-                    Button(onClick = { viewModel.selectProject("") }) {
+                    Button(onClick = { viewModel.clearProjectSelection() }) {
                         Text("Back to Projects")
                     }
                     Text("Chapters", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
@@ -136,7 +151,10 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                         )
 
                         Row {
-                            Button(onClick = { viewModel.saveSceneProse(scene.id, proseText) }) {
+                            Button(
+                                onClick = { viewModel.saveSceneProse(scene.id, proseText) },
+                                enabled = !(proseText.isEmpty() && scene.prose.isNotEmpty()) // Disable ordinary save if clearing
+                            ) {
                                 Text("Save")
                             }
                             if (proseText.isEmpty() && scene.prose.isNotEmpty()) {

@@ -85,6 +85,8 @@ class ManuscriptRepository(
     suspend fun updateSceneProse(sceneId: String, newProse: String, isUserIntentClear: Boolean = false) {
         database.withTransaction {
             val scene = dao.getSceneById(sceneId) ?: return@withTransaction
+            val chapter = dao.getChapterById(scene.chapterId) ?: return@withTransaction
+            val realProjectId = chapter.projectId
             
             // Empty overwrite protection:
             val isClearing = scene.prose.isNotEmpty() && newProse.isEmpty()
@@ -102,10 +104,10 @@ class ManuscriptRepository(
             val afterJsonStr = json.encodeToString(updatedScene)
 
             if (isClearing) {
-                // Destructive operation -> Checkpoint
+                // Destructive operation -> Checkpoint and Revision
                 val checkpoint = CheckpointEntity(
                     id = generateId(),
-                    projectId = scene.chapterId, // Needs real project ID lookup in full app, using chapterId as placeholder for simplicity unless we fetch chapter.
+                    projectId = realProjectId,
                     affectedEntityType = "SCENE",
                     affectedEntityId = scene.id,
                     reason = "User intentionally cleared scene",
@@ -116,11 +118,25 @@ class ManuscriptRepository(
                     createdAt = System.currentTimeMillis()
                 )
                 dao.insertCheckpoint(checkpoint)
+
+                val revision = RevisionEntity(
+                    id = generateId(),
+                    projectId = realProjectId,
+                    entityType = "SCENE",
+                    entityId = scene.id,
+                    operationType = "UPDATE_PROSE_CLEAR",
+                    beforeJson = beforeJsonStr,
+                    afterJson = afterJsonStr,
+                    createdAt = System.currentTimeMillis(),
+                    reason = "Intentional clear",
+                    groupId = null
+                )
+                dao.insertRevision(revision)
             } else if (scene.prose != newProse) {
                 // Normal revision tracking (In real app, debounce/coalesce logic happens in ViewModel, here we save what VM sends)
                 val revision = RevisionEntity(
                     id = generateId(),
-                    projectId = scene.chapterId, // same
+                    projectId = realProjectId,
                     entityType = "SCENE",
                     entityId = scene.id,
                     operationType = "UPDATE_PROSE",
@@ -140,12 +156,15 @@ class ManuscriptRepository(
     suspend fun deleteSceneSoft(sceneId: String) {
         database.withTransaction {
             val scene = dao.getSceneById(sceneId) ?: return@withTransaction
+            val chapter = dao.getChapterById(scene.chapterId) ?: return@withTransaction
+            val realProjectId = chapter.projectId
+            
             val beforeJsonStr = json.encodeToString(scene)
             
             // Destructive action -> Checkpoint
             val checkpoint = CheckpointEntity(
                 id = generateId(),
-                projectId = scene.chapterId,
+                projectId = realProjectId,
                 affectedEntityType = "SCENE",
                 affectedEntityId = scene.id,
                 reason = "User deleted scene",
@@ -166,7 +185,7 @@ class ManuscriptRepository(
             
             val revision = RevisionEntity(
                 id = generateId(),
-                projectId = scene.chapterId,
+                projectId = realProjectId,
                 entityType = "SCENE",
                 entityId = scene.id,
                 operationType = "DELETE",

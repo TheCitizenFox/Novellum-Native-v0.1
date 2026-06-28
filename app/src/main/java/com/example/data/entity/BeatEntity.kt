@@ -13,8 +13,7 @@ import kotlinx.serialization.Serializable
         ForeignKey(
             entity = SceneEntity::class,
             parentColumns = ["id"],
-            childColumns = ["sceneId"],
-            onDelete = ForeignKey.CASCADE
+            childColumns = ["sceneId"]
         )
     ],
     indices = [Index("sceneId")]

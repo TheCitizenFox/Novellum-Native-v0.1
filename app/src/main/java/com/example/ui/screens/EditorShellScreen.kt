@@ -4,8 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,10 +33,23 @@ import com.example.data.entity.ChapterEntity
 import com.example.data.entity.ProjectEntity
 import com.example.data.entity.SceneEntity
 import com.example.ui.viewmodel.EditorViewModel
+import com.example.ui.viewmodel.SaveState
 
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,13 +61,57 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
     val selectedSceneId by viewModel.selectedSceneId.collectAsStateWithLifecycle()
     val currentScene by viewModel.currentScene.collectAsStateWithLifecycle()
     val uiMessage by viewModel.uiMessage.collectAsStateWithLifecycle()
+    val saveState by viewModel.saveState.collectAsStateWithLifecycle()
+    val lastSavedTime by viewModel.lastSavedTime.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Observe App Backgrounding for Autosave
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_PAUSE) {
+                viewModel.forceSaveCurrentScene()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     LaunchedEffect(uiMessage) {
         uiMessage?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearUiMessage()
+        }
+    }
+
+    val exportJsonLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri?.let {
+            scope.launch {
+                val projectId = selectedProjectId ?: return@launch
+                val json = viewModel.getProjectBackupJson(projectId) ?: return@launch
+                context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                    outputStream.write(json.toByteArray())
+                }
+                snackbarHostState.showSnackbar("Backup exported.")
+            }
+        }
+    }
+
+    val exportMarkdownLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/markdown")) { uri ->
+        uri?.let {
+            scope.launch {
+                val projectId = selectedProjectId ?: return@launch
+                val markdown = viewModel.getProjectMarkdown(projectId) ?: return@launch
+                context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                    outputStream.write(markdown.toByteArray())
+                }
+                snackbarHostState.showSnackbar("Manuscript exported.")
+            }
         }
     }
 
@@ -95,6 +154,20 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                     Button(onClick = { viewModel.clearProjectSelection() }) {
                         Text("Back to Projects")
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = {
+                        val timestamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
+                        exportJsonLauncher.launch("Novellum_Backup_${timestamp}.json")
+                    }) {
+                        Text("Export JSON Backup")
+                    }
+                    Button(onClick = {
+                        val timestamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
+                        exportMarkdownLauncher.launch("Novellum_Manuscript_${timestamp}.md")
+                    }) {
+                        Text("Export Markdown")
+                    }
+
                     Text("Chapters", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
                     Button(onClick = { viewModel.createChapter("New Chapter") }) {
                         Text("New Chapter")
@@ -137,12 +210,19 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                     val scene = currentScene!!
                     var proseText by remember(scene.id) { mutableStateOf(scene.prose) }
 
+                    LaunchedEffect(scene.id) {
+                        viewModel.syncSceneState(scene.prose)
+                    }
+
                     Column {
                         Text(scene.title, style = MaterialTheme.typography.headlineMedium)
                         
                         TextField(
                             value = proseText,
-                            onValueChange = { proseText = it },
+                            onValueChange = { 
+                                proseText = it
+                                viewModel.onProseChanged(it)
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
@@ -152,13 +232,15 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
 
                         Row {
                             Button(
-                                onClick = { viewModel.saveSceneProse(scene.id, proseText) },
-                                enabled = !(proseText.isEmpty() && scene.prose.isNotEmpty()) // Disable ordinary save if clearing
+                                onClick = { viewModel.forceSaveCurrentScene() },
+                                enabled = saveState == SaveState.UNSAVED || saveState == SaveState.AUTOSAVING
                             ) {
                                 Text("Save")
                             }
-                            if (proseText.isEmpty() && scene.prose.isNotEmpty()) {
-                                Button(onClick = { viewModel.saveSceneProse(scene.id, proseText, isUserIntentClear = true) }, modifier = Modifier.padding(start = 8.dp)) {
+                            if (saveState == SaveState.BLOCKED_EMPTY_CLEAR) {
+                                Button(onClick = { 
+                                    viewModel.forceSaveCurrentScene(isUserIntentClear = true) 
+                                }, modifier = Modifier.padding(start = 8.dp)) {
                                     Text("Confirm Clear")
                                 }
                             }
@@ -166,6 +248,18 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                                 Text("Delete Scene")
                             }
                         }
+
+                        // Save Status Message
+                        val statusMsg = when (saveState) {
+                            SaveState.SAVED -> lastSavedTime?.let { time ->
+                                val formatted = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date(time))
+                                "Saved at $formatted"
+                            } ?: "Saved"
+                            SaveState.UNSAVED -> "Unsaved changes"
+                            SaveState.AUTOSAVING -> "Autosaving..."
+                            SaveState.BLOCKED_EMPTY_CLEAR -> "Autosave blocked: empty clear requires confirmation"
+                        }
+                        Text(statusMsg, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
                     }
                 } else {
                     Text("Select a scene to edit.", style = MaterialTheme.typography.bodyLarge)

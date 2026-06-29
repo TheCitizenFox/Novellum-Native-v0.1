@@ -12,7 +12,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+enum class SaveState {
+    SAVED, UNSAVED, AUTOSAVING, BLOCKED_EMPTY_CLEAR
+}
 
 class EditorViewModel(
     private val repository: ManuscriptRepository
@@ -59,6 +68,17 @@ class EditorViewModel(
     private val _uiMessage = MutableStateFlow<String?>(null)
     val uiMessage = _uiMessage.asStateFlow()
 
+    private val _saveState = MutableStateFlow(SaveState.SAVED)
+    val saveState = _saveState.asStateFlow()
+
+    private val _lastSavedTime = MutableStateFlow<Long?>(null)
+    val lastSavedTime = _lastSavedTime.asStateFlow()
+
+    private var autosaveJob: Job? = null
+    private var draftProse: String = ""
+    private var savedProse: String = ""
+    private var activeSceneId: String? = null
+
     fun selectProject(projectId: String) {
         _selectedProjectId.value = projectId
         _selectedSceneId.value = null
@@ -74,7 +94,21 @@ class EditorViewModel(
     }
 
     fun selectScene(sceneId: String) {
+        forceSaveCurrentScene() // Ensure previous is saved if switching
         _selectedSceneId.value = sceneId
+        activeSceneId = sceneId
+        autosaveJob?.cancel()
+        
+        // Reset state for new scene (wait for flow to emit, but prep state)
+        // In a real app we might want to observe the currentScene synchronously for the switch
+        _saveState.value = SaveState.SAVED
+    }
+    
+    // Called by UI when scene data loads to sync our tracking state
+    fun syncSceneState(prose: String) {
+        draftProse = prose
+        savedProse = prose
+        _saveState.value = SaveState.SAVED
     }
 
     fun createProject(title: String, description: String) {
@@ -96,15 +130,44 @@ class EditorViewModel(
         }
     }
 
-    // Debouncing happens in UI layer or flow for simplicity, here we just expose save
-    fun saveSceneProse(sceneId: String, newProse: String, isUserIntentClear: Boolean = false) {
+    fun onProseChanged(newProse: String) {
+        draftProse = newProse
+        autosaveJob?.cancel()
+        
+        if (draftProse != savedProse) {
+            if (draftProse.isEmpty() && savedProse.isNotEmpty()) {
+                _saveState.value = SaveState.BLOCKED_EMPTY_CLEAR
+            } else {
+                _saveState.value = SaveState.UNSAVED
+                autosaveJob = viewModelScope.launch {
+                    delay(3000) // 3 seconds delay for autosave
+                    forceSaveCurrentScene()
+                }
+            }
+        } else {
+            _saveState.value = SaveState.SAVED
+        }
+    }
+
+    fun forceSaveCurrentScene(isUserIntentClear: Boolean = false) {
+        val sceneId = activeSceneId ?: return
+        if (draftProse == savedProse) return
+        if (draftProse.isEmpty() && savedProse.isNotEmpty() && !isUserIntentClear) return
+
+        val proseToSave = draftProse
+        _saveState.value = SaveState.AUTOSAVING
+        autosaveJob?.cancel()
+
         viewModelScope.launch {
             try {
-                repository.updateSceneProse(sceneId, newProse, isUserIntentClear)
+                repository.updateSceneProse(sceneId, proseToSave, isUserIntentClear)
+                savedProse = proseToSave
+                _saveState.value = SaveState.SAVED
+                _lastSavedTime.value = System.currentTimeMillis()
             } catch (e: IllegalStateException) {
-                // Handle programmatic empty overwrite rejection
                 e.printStackTrace()
                 _uiMessage.value = e.message ?: "Failed to save scene: Safety rejection."
+                _saveState.value = SaveState.UNSAVED
             }
         }
     }
@@ -114,7 +177,16 @@ class EditorViewModel(
             repository.deleteSceneSoft(sceneId)
             if (_selectedSceneId.value == sceneId) {
                 _selectedSceneId.value = null
+                activeSceneId = null
             }
         }
+    }
+
+    suspend fun getProjectBackupJson(projectId: String): String? {
+        return repository.getFullProjectJson(projectId)
+    }
+
+    suspend fun getProjectMarkdown(projectId: String): String? {
+        return repository.getFullProjectMarkdown(projectId)
     }
 }

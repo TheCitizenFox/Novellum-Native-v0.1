@@ -36,8 +36,54 @@ class ManuscriptRepository(
     fun getScenes(chapterId: String): Flow<List<SceneEntity>> = dao.getScenesForChapter(chapterId)
     fun getBeats(sceneId: String): Flow<List<BeatEntity>> = dao.getBeatsForScene(sceneId)
     fun getSceneFlow(sceneId: String): Flow<SceneEntity?> = dao.getSceneFlow(sceneId)
-
+    
     suspend fun getProjectById(projectId: String): ProjectEntity? = dao.getProjectById(projectId)
+
+    // --- Export ---
+    suspend fun getFullProjectJson(projectId: String): String? {
+        val project = dao.getProjectById(projectId) ?: return null
+        val chapters = dao.getChaptersForProjectSync(projectId)
+        val scenes = dao.getScenesForProjectSync(projectId)
+        val beats = dao.getBeatsForProjectSync(projectId)
+        val snippets = dao.getSnippetsForProjectSync(projectId)
+        val stagingItems = dao.getStagingItemsForProjectSync(projectId)
+
+        val backup = com.example.data.model.ProjectBackup(
+            schemaVersion = 1,
+            exportedAt = System.currentTimeMillis(),
+            appName = "Novellum",
+            project = project,
+            chapters = chapters,
+            scenes = scenes,
+            beats = beats,
+            snippets = snippets,
+            stagingItems = stagingItems
+        )
+        return json.encodeToString(backup)
+    }
+
+    suspend fun getFullProjectMarkdown(projectId: String): String? {
+        val project = dao.getProjectById(projectId) ?: return null
+        val chapters = dao.getChaptersForProjectSync(projectId)
+        val scenes = dao.getScenesForProjectSync(projectId)
+        // Beats could be queried if needed, omitted here for simplicity unless text is populated in them.
+
+        val sb = StringBuilder()
+        sb.append("# ${project.title}\n\n")
+        
+        for (chapter in chapters) {
+            sb.append("## ${chapter.title}\n\n")
+            val chapterScenes = scenes.filter { it.chapterId == chapter.id }
+            for (scene in chapterScenes) {
+                sb.append("### ${scene.title}\n\n")
+                if (scene.prose.isNotEmpty()) {
+                    sb.append(scene.prose).append("\n\n")
+                }
+            }
+        }
+        
+        return sb.toString()
+    }
 
     // --- Writes ---
     suspend fun createProject(title: String, description: String) {

@@ -36,6 +36,9 @@ interface ManuscriptDao {
     @Query("SELECT * FROM chapters WHERE projectId = :projectId AND isDeleted = 0 ORDER BY orderIndex ASC")
     fun getChaptersForProject(projectId: String): Flow<List<ChapterEntity>>
     
+    @Query("SELECT * FROM chapters WHERE projectId = :projectId AND isDeleted = 0 ORDER BY orderIndex ASC")
+    suspend fun getChaptersForProjectSync(projectId: String): List<ChapterEntity>
+    
     @Query("SELECT * FROM chapters WHERE id = :id")
     suspend fun getChapterById(id: String): ChapterEntity?
 
@@ -48,6 +51,9 @@ interface ManuscriptDao {
     // --- Scenes ---
     @Query("SELECT scenes.* FROM scenes INNER JOIN chapters ON scenes.chapterId = chapters.id WHERE chapters.projectId = :projectId AND scenes.isDeleted = 0 ORDER BY chapters.orderIndex ASC, scenes.orderIndex ASC")
     fun getScenesForProject(projectId: String): Flow<List<SceneEntity>>
+
+    @Query("SELECT scenes.* FROM scenes INNER JOIN chapters ON scenes.chapterId = chapters.id WHERE chapters.projectId = :projectId AND scenes.isDeleted = 0 ORDER BY chapters.orderIndex ASC, scenes.orderIndex ASC")
+    suspend fun getScenesForProjectSync(projectId: String): List<SceneEntity>
 
     @Query("SELECT * FROM scenes WHERE chapterId = :chapterId AND isDeleted = 0 ORDER BY orderIndex ASC")
     fun getScenesForChapter(chapterId: String): Flow<List<SceneEntity>>
@@ -68,6 +74,9 @@ interface ManuscriptDao {
     @Query("SELECT * FROM beats WHERE sceneId = :sceneId AND isDeleted = 0 ORDER BY orderIndex ASC")
     fun getBeatsForScene(sceneId: String): Flow<List<BeatEntity>>
 
+    @Query("SELECT beats.* FROM beats INNER JOIN scenes ON beats.sceneId = scenes.id INNER JOIN chapters ON scenes.chapterId = chapters.id WHERE chapters.projectId = :projectId AND beats.isDeleted = 0 ORDER BY chapters.orderIndex ASC, scenes.orderIndex ASC, beats.orderIndex ASC")
+    suspend fun getBeatsForProjectSync(projectId: String): List<BeatEntity>
+
     @Query("SELECT * FROM beats WHERE id = :id")
     suspend fun getBeatById(id: String): BeatEntity?
 
@@ -80,6 +89,9 @@ interface ManuscriptDao {
     // --- Snippets ---
     @Query("SELECT * FROM snippets WHERE projectId = :projectId AND isDeleted = 0")
     fun getSnippetsForProject(projectId: String): Flow<List<SnippetEntity>>
+    
+    @Query("SELECT * FROM snippets WHERE projectId = :projectId AND isDeleted = 0")
+    suspend fun getSnippetsForProjectSync(projectId: String): List<SnippetEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSnippet(snippet: SnippetEntity)
@@ -90,6 +102,9 @@ interface ManuscriptDao {
     // --- Staging Items ---
     @Query("SELECT * FROM staging_items WHERE projectId = :projectId AND isDeleted = 0")
     fun getStagingItemsForProject(projectId: String): Flow<List<StagingItemEntity>>
+    
+    @Query("SELECT * FROM staging_items WHERE projectId = :projectId AND isDeleted = 0")
+    suspend fun getStagingItemsForProjectSync(projectId: String): List<StagingItemEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStagingItem(item: StagingItemEntity)

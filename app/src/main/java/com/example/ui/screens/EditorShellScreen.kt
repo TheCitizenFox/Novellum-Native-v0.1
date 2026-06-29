@@ -233,7 +233,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                         Row {
                             Button(
                                 onClick = { viewModel.forceSaveCurrentScene() },
-                                enabled = saveState == SaveState.UNSAVED || saveState == SaveState.AUTOSAVING
+                                enabled = saveState == SaveState.UNSAVED
                             ) {
                                 Text("Save")
                             }

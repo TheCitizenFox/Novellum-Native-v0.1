@@ -153,6 +153,7 @@ class EditorViewModel(
         val sceneId = activeSceneId ?: return
         if (draftProse == savedProse) return
         if (draftProse.isEmpty() && savedProse.isNotEmpty() && !isUserIntentClear) return
+        if (_saveState.value == SaveState.AUTOSAVING) return
 
         val proseToSave = draftProse
         _saveState.value = SaveState.AUTOSAVING
@@ -162,12 +163,24 @@ class EditorViewModel(
             try {
                 repository.updateSceneProse(sceneId, proseToSave, isUserIntentClear)
                 savedProse = proseToSave
-                _saveState.value = SaveState.SAVED
+                
+                if (draftProse == savedProse) {
+                    _saveState.value = SaveState.SAVED
+                } else if (draftProse.isEmpty() && savedProse.isNotEmpty()) {
+                    _saveState.value = SaveState.BLOCKED_EMPTY_CLEAR
+                } else {
+                    _saveState.value = SaveState.UNSAVED
+                }
                 _lastSavedTime.value = System.currentTimeMillis()
             } catch (e: IllegalStateException) {
                 e.printStackTrace()
                 _uiMessage.value = e.message ?: "Failed to save scene: Safety rejection."
-                _saveState.value = SaveState.UNSAVED
+                
+                if (draftProse.isEmpty() && savedProse.isNotEmpty()) {
+                    _saveState.value = SaveState.BLOCKED_EMPTY_CLEAR
+                } else {
+                    _saveState.value = SaveState.UNSAVED
+                }
             }
         }
     }

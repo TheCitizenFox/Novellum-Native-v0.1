@@ -66,7 +66,7 @@ class ManuscriptRepository(
         val project = dao.getProjectById(projectId) ?: return null
         val chapters = dao.getChaptersForProjectSync(projectId)
         val scenes = dao.getScenesForProjectSync(projectId)
-        // Beats could be queried if needed, omitted here for simplicity unless text is populated in them.
+        val beats = dao.getBeatsForProjectSync(projectId)
 
         val sb = StringBuilder()
         sb.append("# ${project.title}\n\n")
@@ -78,6 +78,19 @@ class ManuscriptRepository(
                 sb.append("### ${scene.title}\n\n")
                 if (scene.prose.isNotEmpty()) {
                     sb.append(scene.prose).append("\n\n")
+                }
+                
+                val sceneBeats = beats.filter { it.sceneId == scene.id }
+                if (sceneBeats.isNotEmpty()) {
+                    sb.append("Beats\n\n")
+                    for (beat in sceneBeats) {
+                        if (beat.prose.isNotEmpty()) {
+                            sb.append("- ${beat.prose}\n")
+                        } else {
+                            sb.append("- ${beat.title}\n") // fallback to title if prose is empty
+                        }
+                    }
+                    sb.append("\n")
                 }
             }
         }

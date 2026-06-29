@@ -162,24 +162,29 @@ class EditorViewModel(
         viewModelScope.launch {
             try {
                 repository.updateSceneProse(sceneId, proseToSave, isUserIntentClear)
-                savedProse = proseToSave
                 
-                if (draftProse == savedProse) {
-                    _saveState.value = SaveState.SAVED
-                } else if (draftProse.isEmpty() && savedProse.isNotEmpty()) {
-                    _saveState.value = SaveState.BLOCKED_EMPTY_CLEAR
-                } else {
-                    _saveState.value = SaveState.UNSAVED
+                if (sceneId == activeSceneId) {
+                    savedProse = proseToSave
+                    
+                    if (draftProse == savedProse) {
+                        _saveState.value = SaveState.SAVED
+                    } else if (draftProse.isEmpty() && savedProse.isNotEmpty()) {
+                        _saveState.value = SaveState.BLOCKED_EMPTY_CLEAR
+                    } else {
+                        _saveState.value = SaveState.UNSAVED
+                    }
+                    _lastSavedTime.value = System.currentTimeMillis()
                 }
-                _lastSavedTime.value = System.currentTimeMillis()
             } catch (e: IllegalStateException) {
                 e.printStackTrace()
-                _uiMessage.value = e.message ?: "Failed to save scene: Safety rejection."
-                
-                if (draftProse.isEmpty() && savedProse.isNotEmpty()) {
-                    _saveState.value = SaveState.BLOCKED_EMPTY_CLEAR
-                } else {
-                    _saveState.value = SaveState.UNSAVED
+                if (sceneId == activeSceneId) {
+                    _uiMessage.value = e.message ?: "Failed to save scene: Safety rejection."
+                    
+                    if (draftProse.isEmpty() && savedProse.isNotEmpty()) {
+                        _saveState.value = SaveState.BLOCKED_EMPTY_CLEAR
+                    } else {
+                        _saveState.value = SaveState.UNSAVED
+                    }
                 }
             }
         }

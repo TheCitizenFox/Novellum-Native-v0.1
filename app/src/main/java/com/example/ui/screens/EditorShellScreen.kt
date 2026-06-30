@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,15 +13,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -117,152 +127,251 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Novellum") })
+            TopAppBar(
+                title = { Text("Novellum") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.primary
+                )
+            )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Row(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Sidebar
-            Column(
-                modifier = Modifier
-                    .width(300.dp)
-                    .fillMaxSize()
-                    .padding(8.dp)
-            ) {
-                if (selectedProjectId == null) {
-                    Text("Projects", style = MaterialTheme.typography.titleMedium)
-                    Button(onClick = { viewModel.createProject("New Project", "") }) {
-                        Text("New Project")
-                    }
-                    LazyColumn {
-                        items(projects) { project ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clickable { viewModel.selectProject(project.id) }
+            val isLandscape = maxWidth > 600.dp
+            
+            val sidebarContent: @Composable () -> Unit = {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        if (selectedProjectId == null) {
+                            Text("Projects", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { viewModel.createProject("New Project", "") },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             ) {
-                                Text(project.title, modifier = Modifier.padding(8.dp))
+                                Text("New Project", color = MaterialTheme.colorScheme.onPrimary)
                             }
-                        }
-                    }
-                } else {
-                    Button(onClick = { viewModel.clearProjectSelection() }) {
-                        Text("Back to Projects")
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = {
-                        val timestamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
-                        exportJsonLauncher.launch("Novellum_Backup_${timestamp}.json")
-                    }) {
-                        Text("Export JSON Backup")
-                    }
-                    Button(onClick = {
-                        val timestamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
-                        exportMarkdownLauncher.launch("Novellum_Manuscript_${timestamp}.md")
-                    }) {
-                        Text("Export Markdown")
-                    }
-
-                    Text("Chapters", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
-                    Button(onClick = { viewModel.createChapter("New Chapter") }) {
-                        Text("New Chapter")
-                    }
-                    LazyColumn {
-                        items(chapters) { chapter ->
-                            Text(chapter.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(vertical = 4.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LazyColumn {
+                                items(projects) { project ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                            .clickable { viewModel.selectProject(project.id) },
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                    ) {
+                                        Text(project.title, modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurface)
+                                    }
+                                }
+                            }
+                        } else {
+                            Button(
+                                onClick = { viewModel.clearProjectSelection() },
+                                colors = ButtonDefaults.textButtonColors(),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
+                                Text("Back to Projects", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             
-                            // Display scenes for this chapter
-                            val scenesInChapter = projectScenes.filter { it.chapterId == chapter.id }
-                            for (scene in scenesInChapter) {
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(start = 16.dp, top = 2.dp, bottom = 2.dp)
-                                        .clickable { viewModel.selectScene(scene.id) }
+                            Row {
+                                Button(
+                                    onClick = {
+                                        val timestamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
+                                        exportJsonLauncher.launch("Novellum_Backup_${timestamp}.json")
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
                                 ) {
-                                    Text(scene.title, modifier = Modifier.padding(8.dp))
+                                    Text("JSON", color = MaterialTheme.colorScheme.onSurface)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = {
+                                        val timestamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
+                                        exportMarkdownLauncher.launch("Novellum_Manuscript_${timestamp}.md")
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
+                                ) {
+                                    Text("Markdown", color = MaterialTheme.colorScheme.onSurface)
                                 }
                             }
                             
-                            Button(onClick = { viewModel.createScene(chapter.id, "New Scene") }, modifier = Modifier.padding(start = 16.dp)) {
-                                Text("New Scene")
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("Chapters", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Button(
+                                onClick = { viewModel.createChapter("New Chapter") },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text("New Chapter", color = MaterialTheme.colorScheme.onPrimary)
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            LazyColumn {
+                                items(chapters) { chapter ->
+                                    Text(
+                                        text = chapter.title, 
+                                        style = MaterialTheme.typography.titleMedium, 
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                                    )
+                                    
+                                    val scenesInChapter = projectScenes.filter { it.chapterId == chapter.id }
+                                    for (scene in scenesInChapter) {
+                                        val isSelected = currentScene?.id == scene.id
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(start = 16.dp, top = 4.dp, bottom = 4.dp)
+                                                .clickable { viewModel.selectScene(scene.id) },
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+                                            )
+                                        ) {
+                                            Text(
+                                                text = scene.title, 
+                                                modifier = Modifier.padding(12.dp),
+                                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                    
+                                    Button(
+                                        onClick = { viewModel.createScene(chapter.id, "New Scene") }, 
+                                        colors = ButtonDefaults.textButtonColors(),
+                                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                                    ) {
+                                        Text("+ Scene", color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+            
+            val editorContent: @Composable () -> Unit = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp, vertical = 24.dp)
+                ) {
+                    if (currentScene != null) {
+                        val scene = currentScene!!
+                        var proseText by remember(scene.id) { mutableStateOf(scene.prose) }
 
-            Divider(modifier = Modifier.width(1.dp).fillMaxSize())
+                        LaunchedEffect(scene.id) {
+                            viewModel.syncSceneState(scene.prose)
+                        }
 
-            // Editor Area
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                if (currentScene != null) {
-                    val scene = currentScene!!
-                    var proseText by remember(scene.id) { mutableStateOf(scene.prose) }
-
-                    LaunchedEffect(scene.id) {
-                        viewModel.syncSceneState(scene.prose)
-                    }
-
-                    Column {
-                        Text(scene.title, style = MaterialTheme.typography.headlineMedium)
-                        
-                        TextField(
-                            value = proseText,
-                            onValueChange = { 
-                                proseText = it
-                                viewModel.onProseChanged(it)
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                                .padding(vertical = 8.dp),
-                            placeholder = { Text("Write here...") }
-                        )
-
-                        Row {
-                            Button(
-                                onClick = { viewModel.forceSaveCurrentScene() },
-                                enabled = saveState == SaveState.UNSAVED
-                            ) {
-                                Text("Save")
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            if (!isLandscape) {
+                                IconButton(onClick = { viewModel.clearProjectSelection() }) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.primary)
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
                             }
-                            if (saveState == SaveState.BLOCKED_EMPTY_CLEAR) {
-                                Button(onClick = { 
-                                    viewModel.forceSaveCurrentScene(isUserIntentClear = true) 
-                                }, modifier = Modifier.padding(start = 8.dp)) {
-                                    Text("Confirm Clear")
+                            
+                            Text(scene.title, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+                            
+                            TextField(
+                                value = proseText,
+                                onValueChange = { 
+                                    proseText = it
+                                    viewModel.onProseChanged(it)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(vertical = 16.dp),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
+                                placeholder = { Text("Write here...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                                    unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                                    focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                                    unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                                )
+                            )
+
+                            Row {
+                                Button(
+                                    onClick = { viewModel.forceSaveCurrentScene() },
+                                    enabled = saveState == SaveState.UNSAVED,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.surface,
+                                        contentColor = MaterialTheme.colorScheme.primary
+                                    )
+                                ) {
+                                    Text("Save")
+                                }
+                                if (saveState == SaveState.BLOCKED_EMPTY_CLEAR) {
+                                    Button(
+                                        onClick = { viewModel.forceSaveCurrentScene(isUserIntentClear = true) }, 
+                                        modifier = Modifier.padding(start = 8.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                    ) {
+                                        Text("Confirm Clear")
+                                    }
+                                }
+                                Button(
+                                    onClick = { viewModel.deleteScene(scene.id) }, 
+                                    modifier = Modifier.padding(start = 8.dp),
+                                    colors = ButtonDefaults.textButtonColors()
+                                ) {
+                                    Text("Delete Scene", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
-                            Button(onClick = { viewModel.deleteScene(scene.id) }, modifier = Modifier.padding(start = 8.dp)) {
-                                Text("Delete Scene")
-                            }
-                        }
 
-                        // Save Status Message
-                        val statusMsg = when (saveState) {
-                            SaveState.SAVED -> lastSavedTime?.let { time ->
-                                val formatted = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date(time))
-                                "Saved at $formatted"
-                            } ?: "Saved"
-                            SaveState.UNSAVED -> "Unsaved changes"
-                            SaveState.AUTOSAVING -> "Autosaving..."
-                            SaveState.BLOCKED_EMPTY_CLEAR -> "Autosave blocked: empty clear requires confirmation"
+                            // Save Status Message
+                            val statusMsg = when (saveState) {
+                                SaveState.SAVED -> lastSavedTime?.let { time ->
+                                    val formatted = SimpleDateFormat("HH:mm", Locale.US).format(Date(time))
+                                    "Saved at $formatted"
+                                } ?: "Saved"
+                                SaveState.UNSAVED -> "Unsaved changes"
+                                SaveState.AUTOSAVING -> "Autosaving..."
+                                SaveState.BLOCKED_EMPTY_CLEAR -> "Autosave blocked: empty clear requires confirmation"
+                            }
+                            Text(statusMsg, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp))
                         }
-                        Text(statusMsg, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+                    } else {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                            Text("Select a scene to edit.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
+                }
+            }
+
+            if (isLandscape) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.width(320.dp)) {
+                        sidebarContent()
+                    }
+                    Divider(modifier = Modifier.width(1.dp).fillMaxSize(), color = MaterialTheme.colorScheme.outline)
+                    Box(modifier = Modifier.weight(1f)) {
+                        editorContent()
+                    }
+                }
+            } else {
+                if (currentScene == null) {
+                    sidebarContent()
                 } else {
-                    Text("Select a scene to edit.", style = MaterialTheme.typography.bodyLarge)
+                    editorContent()
                 }
             }
         }

@@ -183,7 +183,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            val isLandscape = maxWidth > 600.dp
+            val isLandscape = maxWidth > maxHeight
             
             val sidebarContent: @Composable () -> Unit = {
                 Surface(
@@ -320,7 +320,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
 
                         Column(modifier = Modifier.fillMaxSize()) {
                             if (!isLandscape) {
-                                IconButton(onClick = { viewModel.clearProjectSelection() }) {
+                                IconButton(onClick = { isLeftPanelOpen = true }) {
                                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.primary)
                                 }
                                 Spacer(modifier = Modifier.height(16.dp))

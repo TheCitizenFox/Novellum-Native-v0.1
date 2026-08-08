@@ -73,6 +73,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalConfiguration
+import android.content.res.Configuration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -119,6 +121,8 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // Dialog state management
     var showNewProjectDialog by remember { mutableStateOf(false) }
@@ -205,7 +209,12 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             IconButton(
-                                onClick = { isLeftPanelOpen = !isLeftPanelOpen },
+                                onClick = { 
+                                    isLeftPanelOpen = !isLeftPanelOpen 
+                                    if (!isLandscape && isLeftPanelOpen) {
+                                        isRightPanelOpen = false
+                                    }
+                                },
                                 modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(
@@ -325,7 +334,12 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                             }
 
                             IconButton(
-                                onClick = { isRightPanelOpen = !isRightPanelOpen },
+                                onClick = { 
+                                    isRightPanelOpen = !isRightPanelOpen 
+                                    if (!isLandscape && isRightPanelOpen) {
+                                        isLeftPanelOpen = false
+                                    }
+                                },
                                 modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(
@@ -348,8 +362,6 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            val isLandscape = maxWidth > maxHeight
-
             // Left Manuscript Sidebar Content
             val sidebarContent: @Composable () -> Unit = {
                 Surface(
@@ -1103,7 +1115,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
             title = { Text("Delete Scene?", color = TextPrimary) },
             text = {
                 Text(
-                    "Are you sure you want to delete '${scene.title}'? The scene can be restored later in Recovery Mode.",
+                    "Are you sure you want to delete '${scene.title}'? A recovery checkpoint will be created before deletion. Restore functionality is not yet available in this version.",
                     color = TextSecondary
                 )
             },

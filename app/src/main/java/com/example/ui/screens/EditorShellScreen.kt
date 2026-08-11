@@ -1,5 +1,14 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -596,8 +605,15 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                 ) {
                     if (currentScene != null) {
                         val scene = currentScene!!
-                        var proseText by remember(scene.id) { mutableStateOf(scene.prose) }
+                        var proseText by remember(scene.id) { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(scene.prose)) }
                         var showHeaderMenu by remember { mutableStateOf(false) }
+
+                        // Tap-to-Copy state
+                        var copiedRange by remember { mutableStateOf<IntRange?>(null) }
+                        var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+                        val clipboardManager = LocalClipboardManager.current
+                        val haptic = LocalHapticFeedback.current
+                        val viewConfiguration = LocalViewConfiguration.current
 
                         LaunchedEffect(scene.id) {
                             viewModel.syncSceneState(scene.prose)
@@ -696,30 +712,81 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                             HorizontalDivider(color = DividerGray, modifier = Modifier.padding(vertical = 12.dp))
 
                             // Writing Canvas
-                            TextField(
+                            BasicTextField(
                                 value = proseText,
-                                onValueChange = {
-                                    proseText = it
-                                    viewModel.onProseChanged(it)
+                                onValueChange = { newValue ->
+                                    if (proseText.selection != newValue.selection) {
+                                        copiedRange = null
+                                    }
+                                    proseText = newValue
+                                    viewModel.onProseChanged(newValue.text)
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .weight(1f),
+                                    .weight(1f)
+                                    .tapToCopyGestures(
+                                        viewConfiguration = viewConfiguration,
+                                        hasActiveSelection = copiedRange != null,
+                                        isTapOnText = { offset -> isTapOnText(textLayoutResult, offset) },
+                                        onExtendSelection = {
+                                            textLayoutResult?.let { layout ->
+                                                copiedRange?.let { currentRange ->
+                                                    val newRange = extendRangeOneLine(layout, currentRange)
+                                                    copiedRange = newRange
+                                                    val textToCopy = proseText.text.substring(newRange.first.coerceIn(0, proseText.text.length), newRange.last.coerceIn(0, proseText.text.length))
+                                                    clipboardManager.setText(AnnotatedString(textToCopy))
+                                                }
+                                            }
+                                        },
+                                        onDismissSelection = { copiedRange = null },
+                                        onLineCapture = { offset ->
+                                            textLayoutResult?.let { layout ->
+                                                getLineRangeForOffset(layout, offset)?.let { range ->
+                                                    copiedRange = range
+                                                    val textToCopy = proseText.text.substring(range.first.coerceIn(0, proseText.text.length), range.last.coerceIn(0, proseText.text.length))
+                                                    clipboardManager.setText(AnnotatedString(textToCopy))
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                }
+                                            }
+                                        },
+                                        onParaCapture = { offset ->
+                                            textLayoutResult?.let { layout ->
+                                                getParagraphRangeForOffset(proseText.text, layout, offset)?.let { range ->
+                                                    copiedRange = range
+                                                    val textToCopy = proseText.text.substring(range.first.coerceIn(0, proseText.text.length), range.last.coerceIn(0, proseText.text.length))
+                                                    clipboardManager.setText(AnnotatedString(textToCopy))
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                }
+                                            }
+                                        }
+                                    )
+                                    .drawBehind {
+                                        copiedRange?.let { range ->
+                                            textLayoutResult?.let { layout ->
+                                                val start = range.first.coerceIn(0, proseText.text.length)
+                                                val end = range.last.coerceIn(0, proseText.text.length)
+                                                if (start < end) {
+                                                    val path = layout.getPathForRange(start, end)
+                                                    drawPath(path, color = IgniteOrange.copy(alpha = 0.35f))
+                                                }
+                                            }
+                                        }
+                                    },
                                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary),
-                                placeholder = {
-                                    Text("Begin writing your prose here...", color = TextMuted, style = MaterialTheme.typography.bodyLarge)
-                                },
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                )
+                                cursorBrush = SolidColor(IgniteOrange),
+                                onTextLayout = { textLayoutResult = it },
+                                decorationBox = { innerTextField ->
+                                    Box {
+                                        if (proseText.text.isEmpty()) {
+                                            Text("Begin writing your prose here...", color = TextMuted, style = MaterialTheme.typography.bodyLarge)
+                                        }
+                                        innerTextField()
+                                    }
+                                }
                             )
 
                             // Status Footer
-                            val wordCount = proseText.split(Regex("\\s+")).filter { it.isNotBlank() }.size
+                            val wordCount = proseText.text.split(Regex("\\s+")).filter { it.isNotBlank() }.size
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,

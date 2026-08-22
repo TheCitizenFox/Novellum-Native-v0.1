@@ -1,1 +1,81 @@
+name: Build Novellum APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: novellum-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-debug-apk:
+    name: Build debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      - name: Verify Gradle wrapper
+        shell: bash
+        run: |
+          set -euxo pipefail
+          test -f ./gradlew
+          test -f ./gradle/wrapper/gradle-wrapper.properties
+          chmod +x ./gradlew
+          ./gradlew --version
+
+      - name: Build Novellum debug APK
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleDebug --stacktrace 2>&1 | tee gradle-build.log
+
+      - name: Locate APK
+        id: apk
+        shell: bash
+        run: |
+          set -euxo pipefail
+          APK_PATH="$(find app/build/outputs/apk/debug -type f -name '*.apk' | head -n 1)"
+          test -n "$APK_PATH"
+          echo "path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "Built APK: $APK_PATH"
+          ls -lh "$APK_PATH"
+
+      - name: Upload Novellum APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: novellum-debug-apk
+          path: ${{ steps.apk.outputs.path }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novellum-build-diagnostics
+          path: |
+            gradle-build.log
+            **/build/reports/**
+          if-no-files-found: ignore
+          retention-days: 14
 

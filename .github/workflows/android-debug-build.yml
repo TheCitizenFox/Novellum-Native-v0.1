@@ -26,14 +26,87 @@ jobs:
           java-version: "17"
 
       # The checked-in gradle-wrapper.jar currently fails Gradle's checksum
-      # validation. We deliberately DO NOT execute that jar here.
-      # Instead, setup-gradle downloads the official Gradle 9.3.1 distribution
-      # and puts the `gradle` executable on PATH.
+      # validation. Do not execute it. Provision the official Gradle release
+      # directly instead.
       - name: Set up official Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "9.3.1"
           validate-wrappers: false
+
+      - name: Verify Java, Gradle, and Android SDK
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          java -version
+          gradle --version
+
+          echo "ANDROID_HOME=${ANDROID_HOME:-}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-}"
+
+          test -d "${ANDROID_HOME}/platforms/android-36.1"
+          test -d "${ANDROID_HOME}/build-tools/36.1.0"
+
+          echo "Android SDK Platform 36.1 and Build Tools 36.1.0 are available."
+
+      - name: Create debug keystore if missing
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          if [ ! -f "$GITHUB_WORKSPACE/debug.keystore" ]; then
+            keytool -genkeypair \
+              -keystore "$GITHUB_WORKSPACE/debug.keystore" \
+              -storepass android \
+              -keypass android \
+              -alias androiddebugkey \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+          keytool -list \
+            -keystore "$GITHUB_WORKSPACE/debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey
+
+      - name: Build debug APK
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle :app:assembleDebug \
+            --stacktrace \
+            --console=plain \
+            2>&1 | tee gradle-build.log
+
+      - name: Show APK output
+        if: success()
+        shell: bash
+        run: |
+          set -euxo pipefail
+          find app/build/outputs/apk -type f -name "*.apk" -print -ls
+
+      - name: Upload Novellum debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novellum-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novellum-build-diagnostics
+          path: |
+            gradle-build.log
+            **/build/reports/**
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Verify Java and Gradle
         shell: bash

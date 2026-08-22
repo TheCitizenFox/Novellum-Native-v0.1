@@ -9,15 +9,11 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: novellum-android-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build-debug-apk:
     name: Build debug APK
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
 
     steps:
       - name: Checkout repository
@@ -27,48 +23,83 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
-      - name: Set up Gradle
+      # The checked-in gradle-wrapper.jar currently fails Gradle's checksum
+      # validation. We deliberately DO NOT execute that jar here.
+      # Instead, setup-gradle downloads the official Gradle 9.3.1 distribution
+      # and puts the `gradle` executable on PATH.
+      - name: Set up official Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-provider: basic
+          gradle-version: "9.3.1"
+          validate-wrappers: false
 
-      - name: Verify Gradle wrapper
+      - name: Verify Java and Gradle
         shell: bash
         run: |
           set -euxo pipefail
-          test -f ./gradlew
-          test -f ./gradle/wrapper/gradle-wrapper.properties
-          chmod +x ./gradlew
-          ./gradlew --version
+          java -version
+          gradle --version
 
-      - name: Build Novellum debug APK
+      - name: Ensure Android SDK 36.1
+        shell: bash
+        run: |
+          set -euxo pipefail
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-36.1" \
+            "build-tools;36.1.0"
+
+      - name: Create debug keystore if missing
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          if [ ! -f "$GITHUB_WORKSPACE/debug.keystore" ]; then
+            keytool -genkeypair \
+              -keystore "$GITHUB_WORKSPACE/debug.keystore" \
+              -storepass android \
+              -keypass android \
+              -alias androiddebugkey \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+          keytool -list \
+            -keystore "$GITHUB_WORKSPACE/debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey
+
+      - name: Build debug APK
         shell: bash
         run: |
           set -o pipefail
-          ./gradlew :app:assembleDebug --stacktrace 2>&1 | tee gradle-build.log
+          gradle :app:assembleDebug \
+            --stacktrace \
+            --console=plain \
+            2>&1 | tee gradle-build.log
 
-      - name: Locate APK
-        id: apk
+      - name: Show APK output
+        if: success()
         shell: bash
         run: |
           set -euxo pipefail
-          APK_PATH="$(find app/build/outputs/apk/debug -type f -name '*.apk' | head -n 1)"
-          test -n "$APK_PATH"
-          echo "path=$APK_PATH" >> "$GITHUB_OUTPUT"
-          echo "Built APK: $APK_PATH"
-          ls -lh "$APK_PATH"
+          find app/build/outputs/apk -type f -name "*.apk" -print -ls
 
-      - name: Upload Novellum APK
+      - name: Upload Novellum debug APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: novellum-debug-apk
-          path: ${{ steps.apk.outputs.path }}
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload build diagnostics on failure
+      - name: Upload build diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
@@ -78,4 +109,3 @@ jobs:
             **/build/reports/**
           if-no-files-found: ignore
           retention-days: 14
-

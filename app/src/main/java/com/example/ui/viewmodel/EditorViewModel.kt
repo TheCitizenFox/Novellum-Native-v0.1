@@ -27,11 +27,8 @@ class EditorViewModel(
 
     val chapters = _selectedProjectId
         .flatMapLatest { projectId ->
-            if (projectId != null) {
-                repository.getChapters(projectId)
-            } else {
-                MutableStateFlow(emptyList())
-            }
+            if (projectId != null) repository.getChapters(projectId)
+            else MutableStateFlow(emptyList())
         }
         .stateIn(
             viewModelScope,
@@ -41,11 +38,8 @@ class EditorViewModel(
 
     val projectScenes = _selectedProjectId
         .flatMapLatest { projectId ->
-            if (projectId != null) {
-                repository.getScenesForProject(projectId)
-            } else {
-                MutableStateFlow(emptyList())
-            }
+            if (projectId != null) repository.getScenesForProject(projectId)
+            else MutableStateFlow(emptyList())
         }
         .stateIn(
             viewModelScope,
@@ -58,11 +52,8 @@ class EditorViewModel(
 
     val currentScene = _selectedSceneId
         .flatMapLatest { sceneId ->
-            if (sceneId != null) {
-                repository.getSceneFlow(sceneId)
-            } else {
-                MutableStateFlow(null)
-            }
+            if (sceneId != null) repository.getSceneFlow(sceneId)
+            else MutableStateFlow(null)
         }
         .stateIn(
             viewModelScope,
@@ -91,24 +82,35 @@ class EditorViewModel(
         _selectedSceneId.value = sceneId
     }
 
-    fun createProject(title: String, description: String) {
-        viewModelScope.launch {
-            repository.createProject(title, description)
-        }
+    fun createProject(title: String, description: String = "") {
+        val clean = title.trim()
+        if (clean.isEmpty()) return
+        viewModelScope.launch { repository.createProject(clean, description) }
     }
 
     fun createChapter(title: String) {
         val projectId = _selectedProjectId.value ?: return
-
-        viewModelScope.launch {
-            repository.createChapter(projectId, title, 0)
-        }
+        val clean = title.trim()
+        if (clean.isEmpty()) return
+        viewModelScope.launch { repository.createChapter(projectId, clean, 0) }
     }
 
     fun createScene(chapterId: String, title: String) {
-        viewModelScope.launch {
-            repository.createScene(chapterId, title, 0)
-        }
+        val clean = title.trim()
+        if (clean.isEmpty()) return
+        viewModelScope.launch { repository.createScene(chapterId, clean, 0) }
+    }
+
+    fun renameProject(projectId: String, title: String) {
+        viewModelScope.launch { repository.renameProject(projectId, title) }
+    }
+
+    fun renameChapter(chapterId: String, title: String) {
+        viewModelScope.launch { repository.renameChapter(chapterId, title) }
+    }
+
+    fun renameScene(sceneId: String, title: String) {
+        viewModelScope.launch { repository.renameScene(sceneId, title) }
     }
 
     fun saveSceneProse(
@@ -134,7 +136,6 @@ class EditorViewModel(
     fun deleteScene(sceneId: String) {
         viewModelScope.launch {
             repository.deleteSceneSoft(sceneId)
-
             if (_selectedSceneId.value == sceneId) {
                 _selectedSceneId.value = null
             }

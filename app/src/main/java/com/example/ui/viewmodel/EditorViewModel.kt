@@ -82,23 +82,33 @@ class EditorViewModel(
         _selectedSceneId.value = sceneId
     }
 
-    fun createProject(title: String, description: String = "") {
-        val clean = title.trim()
-        if (clean.isEmpty()) return
-        viewModelScope.launch { repository.createProject(clean, description) }
+    fun createNextProject() {
+        viewModelScope.launch {
+            repository.createProject("Project", "")
+        }
     }
 
-    fun createChapter(title: String) {
+    fun createNextChapter() {
         val projectId = _selectedProjectId.value ?: return
-        val clean = title.trim()
-        if (clean.isEmpty()) return
-        viewModelScope.launch { repository.createChapter(projectId, clean, 0) }
+        val current = chapters.value
+        val nextOrderIndex = maxOf(
+            current.size,
+            (current.maxOfOrNull { it.orderIndex } ?: -1) + 1
+        )
+        viewModelScope.launch {
+            repository.createChapter(projectId, "Chapter", nextOrderIndex)
+        }
     }
 
-    fun createScene(chapterId: String, title: String) {
-        val clean = title.trim()
-        if (clean.isEmpty()) return
-        viewModelScope.launch { repository.createScene(chapterId, clean, 0) }
+    fun createNextScene(chapterId: String) {
+        val current = projectScenes.value.filter { it.chapterId == chapterId }
+        val nextOrderIndex = maxOf(
+            current.size,
+            (current.maxOfOrNull { it.orderIndex } ?: -1) + 1
+        )
+        viewModelScope.launch {
+            repository.createScene(chapterId, "Scene", nextOrderIndex)
+        }
     }
 
     fun renameProject(projectId: String, title: String) {
@@ -129,6 +139,25 @@ class EditorViewModel(
                 e.printStackTrace()
                 _uiMessage.value =
                     e.message ?: "Failed to save scene: safety rejection."
+            }
+        }
+    }
+
+    fun deleteProject(projectId: String) {
+        viewModelScope.launch {
+            repository.deleteProjectSoft(projectId)
+            if (_selectedProjectId.value == projectId) {
+                _selectedProjectId.value = null
+                _selectedSceneId.value = null
+            }
+        }
+    }
+
+    fun deleteChapter(chapterId: String) {
+        viewModelScope.launch {
+            repository.deleteChapterSoft(chapterId)
+            if (currentScene.value?.chapterId == chapterId) {
+                _selectedSceneId.value = null
             }
         }
     }

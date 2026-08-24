@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -83,12 +84,6 @@ private val NovellumAccent = Color(0xFFC97942)
 private val NovellumAccentSoft = Color(0xFF2B211B)
 private val NovellumDanger = Color(0xFFC86D72)
 
-private sealed class CreateRequest {
-    data object Project : CreateRequest()
-    data object Chapter : CreateRequest()
-    data class Scene(val chapterId: String) : CreateRequest()
-}
-
 @Composable
 fun EditorShellScreen(viewModel: EditorViewModel) {
     val projects by viewModel.projects.collectAsStateWithLifecycle()
@@ -100,7 +95,6 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
     val uiMessage by viewModel.uiMessage.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
-    var createRequest by remember { mutableStateOf<CreateRequest?>(null) }
 
     LaunchedEffect(uiMessage) {
         uiMessage?.let {
@@ -110,6 +104,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
     }
 
     val selectedProject = projects.firstOrNull { it.id == selectedProjectId }
+    val selectedProjectIndex = projects.indexOfFirst { it.id == selectedProjectId }.coerceAtLeast(0)
     val selectedChapter = currentScene?.let { scene ->
         chapters.firstOrNull { it.id == scene.chapterId }
     }
@@ -133,25 +128,29 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
             ) {
                 ManuscriptSidebar(
                     modifier = Modifier
-                        .width(292.dp)
+                        .width(300.dp)
                         .fillMaxHeight(),
                     projectTitle = selectedProject?.title,
+                    projectDisplayTitle = selectedProject?.let {
+                        projectDisplayTitle(it.title, selectedProjectIndex)
+                    },
                     selectedProjectId = selectedProjectId,
                     selectedSceneId = selectedSceneId,
                     projects = projects.map { it.id to it.title },
                     chapters = chapters,
                     scenes = projectScenes,
-                    onRequestCreateProject = { createRequest = CreateRequest.Project },
+                    onCreateProject = viewModel::createNextProject,
                     onSelectProject = viewModel::selectProject,
                     onRenameProject = viewModel::renameProject,
+                    onDeleteProject = viewModel::deleteProject,
                     onBackToProjects = viewModel::clearProjectSelection,
-                    onRequestCreateChapter = { createRequest = CreateRequest.Chapter },
-                    onRequestCreateScene = { chapterId ->
-                        createRequest = CreateRequest.Scene(chapterId)
-                    },
+                    onCreateChapter = viewModel::createNextChapter,
+                    onCreateScene = viewModel::createNextScene,
                     onSelectScene = viewModel::selectScene,
                     onRenameChapter = viewModel::renameChapter,
-                    onRenameScene = viewModel::renameScene
+                    onDeleteChapter = viewModel::deleteChapter,
+                    onRenameScene = viewModel::renameScene,
+                    onDeleteScene = viewModel::deleteScene
                 )
 
                 Box(
@@ -171,9 +170,19 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                     if (scene == null) {
                         EmptyEditorState()
                     } else {
+                        val chapterIndex = chapters.indexOfFirst { it.id == scene.chapterId }
+                        val scenesInChapter = projectScenes.filter { it.chapterId == scene.chapterId }
+                        val sceneIndex = scenesInChapter.indexOfFirst { it.id == scene.id }
+
                         SceneEditor(
                             scene = scene,
-                            chapterTitle = selectedChapter?.title,
+                            chapterTitle = selectedChapter?.let {
+                                chapterDisplayTitle(it.title, chapterIndex.coerceAtLeast(0))
+                            },
+                            sceneDisplayTitle = sceneDisplayTitle(
+                                scene.title,
+                                sceneIndex.coerceAtLeast(0)
+                            ),
                             onRenameScene = { title ->
                                 viewModel.renameScene(scene.id, title)
                             },
@@ -190,33 +199,6 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                 }
             }
         }
-    }
-
-    createRequest?.let { request ->
-        val title = when (request) {
-            CreateRequest.Project -> "New Project"
-            CreateRequest.Chapter -> "New Chapter"
-            is CreateRequest.Scene -> "New Scene"
-        }
-        val label = when (request) {
-            CreateRequest.Project -> "Project title"
-            CreateRequest.Chapter -> "Chapter title"
-            is CreateRequest.Scene -> "Scene title"
-        }
-
-        NameDialog(
-            title = title,
-            label = label,
-            onDismiss = { createRequest = null },
-            onConfirm = { name ->
-                when (request) {
-                    CreateRequest.Project -> viewModel.createProject(name)
-                    CreateRequest.Chapter -> viewModel.createChapter(name)
-                    is CreateRequest.Scene -> viewModel.createScene(request.chapterId, name)
-                }
-                createRequest = null
-            }
-        )
     }
 }
 
@@ -303,24 +285,51 @@ private fun TopNavItem(label: String, active: Boolean) {
     }
 }
 
+private fun isDefaultProjectTitle(title: String): Boolean =
+    Regex("(?i)^(new\\s+)?project(\\s+\\d+)?$").matches(title.trim())
+
+private fun isDefaultChapterTitle(title: String): Boolean =
+    Regex("(?i)^(new\\s+)?chapter(\\s+\\d+)?$").matches(title.trim())
+
+private fun isDefaultSceneTitle(title: String): Boolean =
+    Regex("(?i)^(new\\s+)?scene(\\s+\\d+)?$").matches(title.trim())
+
+private fun projectDisplayTitle(title: String, index: Int): String =
+    if (isDefaultProjectTitle(title)) "Project ${index + 1}" else title
+
+private fun chapterDisplayTitle(title: String, index: Int): String =
+    if (isDefaultChapterTitle(title)) "Chapter ${index + 1}"
+    else "Ch ${index + 1} · $title"
+
+private fun sceneDisplayTitle(title: String, index: Int): String =
+    if (isDefaultSceneTitle(title)) "Scene ${index + 1}"
+    else "Sc ${index + 1} · $title"
+
+private fun countWords(text: String): Int =
+    if (text.isBlank()) 0 else text.trim().split(Regex("\\s+")).size
+
 @Composable
 private fun ManuscriptSidebar(
     modifier: Modifier,
     projectTitle: String?,
+    projectDisplayTitle: String?,
     selectedProjectId: String?,
     selectedSceneId: String?,
     projects: List<Pair<String, String>>,
     chapters: List<ChapterEntity>,
     scenes: List<SceneEntity>,
-    onRequestCreateProject: () -> Unit,
+    onCreateProject: () -> Unit,
     onSelectProject: (String) -> Unit,
     onRenameProject: (String, String) -> Unit,
+    onDeleteProject: (String) -> Unit,
     onBackToProjects: () -> Unit,
-    onRequestCreateChapter: () -> Unit,
-    onRequestCreateScene: (String) -> Unit,
+    onCreateChapter: () -> Unit,
+    onCreateScene: (String) -> Unit,
     onSelectScene: (String) -> Unit,
     onRenameChapter: (String, String) -> Unit,
-    onRenameScene: (String, String) -> Unit
+    onDeleteChapter: (String) -> Unit,
+    onRenameScene: (String, String) -> Unit,
+    onDeleteScene: (String) -> Unit
 ) {
     Column(modifier = modifier.background(NovellumSidebar)) {
         Row(
@@ -340,7 +349,7 @@ private fun ManuscriptSidebar(
             )
 
             if (selectedProjectId == null) {
-                MiniAction("+", onClick = onRequestCreateProject)
+                TreeControl("+", description = "New project", onClick = onCreateProject)
             } else {
                 MiniAction("‹ Projects", onClick = onBackToProjects)
             }
@@ -351,23 +360,27 @@ private fun ManuscriptSidebar(
         if (selectedProjectId == null) {
             ProjectList(
                 projects = projects,
-                onRequestCreateProject = onRequestCreateProject,
+                onCreateProject = onCreateProject,
                 onSelectProject = onSelectProject,
                 onRenameProject = onRenameProject
             )
         } else {
             ProjectManuscript(
                 projectId = selectedProjectId,
-                projectTitle = projectTitle ?: "Untitled Project",
+                projectTitle = projectTitle ?: "Project",
+                projectDisplayTitle = projectDisplayTitle ?: "Project",
                 chapters = chapters,
                 scenes = scenes,
                 selectedSceneId = selectedSceneId,
                 onRenameProject = onRenameProject,
-                onRequestCreateChapter = onRequestCreateChapter,
-                onRequestCreateScene = onRequestCreateScene,
+                onDeleteProject = { onDeleteProject(selectedProjectId) },
+                onCreateChapter = onCreateChapter,
+                onCreateScene = onCreateScene,
                 onSelectScene = onSelectScene,
                 onRenameChapter = onRenameChapter,
-                onRenameScene = onRenameScene
+                onDeleteChapter = onDeleteChapter,
+                onRenameScene = onRenameScene,
+                onDeleteScene = onDeleteScene
             )
         }
     }
@@ -376,7 +389,7 @@ private fun ManuscriptSidebar(
 @Composable
 private fun ProjectList(
     projects: List<Pair<String, String>>,
-    onRequestCreateProject: () -> Unit,
+    onCreateProject: () -> Unit,
     onSelectProject: (String) -> Unit,
     onRenameProject: (String, String) -> Unit
 ) {
@@ -396,31 +409,34 @@ private fun ProjectList(
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f)
             )
-            MiniAction("+ New", onClick = onRequestCreateProject)
+            TreeControl("+", description = "New project", onClick = onCreateProject)
         }
 
         Spacer(Modifier.height(10.dp))
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            items(projects, key = { it.first }) { project ->
+            itemsIndexed(projects, key = { _, item -> item.first }) { index, project ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(NovellumEditor, RoundedCornerShape(5.dp))
                         .border(1.dp, NovellumLineSoft, RoundedCornerShape(5.dp))
-                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                        .padding(horizontal = 9.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("▱", color = NovellumAccent, fontSize = 14.sp)
                     Spacer(Modifier.width(8.dp))
-                    InlineTitle(
+                    ManageableTitle(
                         id = project.first,
-                        title = project.second,
+                        rawTitle = project.second,
+                        displayTitle = projectDisplayTitle(project.second, index),
+                        emptyDraftWhenDefault = isDefaultProjectTitle(project.second),
                         modifier = Modifier.weight(1f),
                         color = NovellumText,
                         fontSize = 13.sp,
                         onTap = { onSelectProject(project.first) },
-                        onRename = { onRenameProject(project.first, it) }
+                        onRename = { onRenameProject(project.first, it) },
+                        onDeleteRequest = null
                     )
                 }
             }
@@ -428,7 +444,7 @@ private fun ProjectList(
 
         Spacer(Modifier.weight(1f))
         Text(
-            "Tap to open • hold a title to rename",
+            "Tap to open • hold a title to manage",
             color = NovellumTextDim,
             fontSize = 9.sp,
             modifier = Modifier.padding(horizontal = 3.dp, vertical = 7.dp)
@@ -440,23 +456,32 @@ private fun ProjectList(
 private fun ProjectManuscript(
     projectId: String,
     projectTitle: String,
+    projectDisplayTitle: String,
     chapters: List<ChapterEntity>,
     scenes: List<SceneEntity>,
     selectedSceneId: String?,
     onRenameProject: (String, String) -> Unit,
-    onRequestCreateChapter: () -> Unit,
-    onRequestCreateScene: (String) -> Unit,
+    onDeleteProject: () -> Unit,
+    onCreateChapter: () -> Unit,
+    onCreateScene: (String) -> Unit,
     onSelectScene: (String) -> Unit,
     onRenameChapter: (String, String) -> Unit,
-    onRenameScene: (String, String) -> Unit
+    onDeleteChapter: (String) -> Unit,
+    onRenameScene: (String, String) -> Unit,
+    onDeleteScene: (String) -> Unit
 ) {
     var projectExpanded by rememberSaveable(projectId) { mutableStateOf(true) }
+    var showProjectDelete by remember(projectId) { mutableStateOf(false) }
+
+    val projectIsEmpty = chapters.isEmpty() && scenes.isEmpty()
+    val projectWordCount = scenes.sumOf { countWords(it.prose) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 7.dp),
+                .height(44.dp)
+                .padding(horizontal = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             DisclosureChevron(
@@ -465,17 +490,30 @@ private fun ProjectManuscript(
                 onClick = { projectExpanded = !projectExpanded }
             )
 
-            InlineTitle(
+            ManageableTitle(
                 id = projectId,
-                title = projectTitle,
+                rawTitle = projectTitle,
+                displayTitle = projectDisplayTitle,
+                emptyDraftWhenDefault = isDefaultProjectTitle(projectTitle),
                 modifier = Modifier.weight(1f),
                 color = NovellumText,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
-                onRename = { onRenameProject(projectId, it) }
+                onRename = { onRenameProject(projectId, it) },
+                onDeleteRequest = {
+                    if (projectIsEmpty) onDeleteProject()
+                    else showProjectDelete = true
+                }
             )
 
-            MiniAction("+", onClick = onRequestCreateChapter)
+            TreeControl(
+                symbol = "+",
+                description = "New chapter",
+                onClick = {
+                    projectExpanded = true
+                    onCreateChapter()
+                }
+            )
         }
 
         if (projectExpanded) {
@@ -485,24 +523,27 @@ private fun ProjectManuscript(
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.3.sp,
-                modifier = Modifier.padding(start = 36.dp, top = 4.dp, bottom = 4.dp)
+                modifier = Modifier.padding(start = 42.dp, top = 2.dp, bottom = 3.dp)
             )
 
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 12.dp)
+                contentPadding = PaddingValues(start = 7.dp, end = 7.dp, bottom = 12.dp)
             ) {
-                items(chapters, key = { it.id }) { chapter ->
+                itemsIndexed(chapters, key = { _, item -> item.id }) { chapterIndex, chapter ->
                     ChapterBlock(
                         chapter = chapter,
+                        chapterIndex = chapterIndex,
                         scenes = scenes.filter { it.chapterId == chapter.id },
                         selectedSceneId = selectedSceneId,
-                        onRequestCreateScene = { onRequestCreateScene(chapter.id) },
+                        onCreateScene = { onCreateScene(chapter.id) },
                         onSelectScene = onSelectScene,
                         onRenameChapter = { onRenameChapter(chapter.id, it) },
-                        onRenameScene = onRenameScene
+                        onDeleteChapter = { onDeleteChapter(chapter.id) },
+                        onRenameScene = onRenameScene,
+                        onDeleteScene = onDeleteScene
                     )
                 }
             }
@@ -523,32 +564,58 @@ private fun ProjectManuscript(
             Text("  •  ", color = NovellumLine, fontSize = 9.sp)
             Text("Export MD", color = NovellumTextDim, fontSize = 9.sp)
             Spacer(Modifier.weight(1f))
-            Text("hold title = rename", color = NovellumTextDim, fontSize = 8.sp)
+            Text("hold title = manage", color = NovellumTextDim, fontSize = 8.sp)
         }
+    }
+
+    if (showProjectDelete) {
+        TypedDeleteDialog(
+            title = "Delete project?",
+            summary = buildString {
+                append("This project contains ${chapters.size} chapter")
+                if (chapters.size != 1) append("s")
+                append(" and ${scenes.size} scene")
+                if (scenes.size != 1) append("s")
+                if (projectWordCount > 0) append(" (${projectWordCount} words)")
+                append(". Type DELETE to move it to Trash.")
+            },
+            onDismiss = { showProjectDelete = false },
+            onConfirm = {
+                showProjectDelete = false
+                onDeleteProject()
+            }
+        )
     }
 }
 
 @Composable
 private fun ChapterBlock(
     chapter: ChapterEntity,
+    chapterIndex: Int,
     scenes: List<SceneEntity>,
     selectedSceneId: String?,
-    onRequestCreateScene: () -> Unit,
+    onCreateScene: () -> Unit,
     onSelectScene: (String) -> Unit,
     onRenameChapter: (String) -> Unit,
-    onRenameScene: (String, String) -> Unit
+    onDeleteChapter: () -> Unit,
+    onRenameScene: (String, String) -> Unit,
+    onDeleteScene: (String) -> Unit
 ) {
     var expanded by rememberSaveable(chapter.id) { mutableStateOf(true) }
+    var showChapterDelete by remember(chapter.id) { mutableStateOf(false) }
+    var sceneDeleteTarget by remember(chapter.id) { mutableStateOf<SceneEntity?>(null) }
+
+    val chapterWordCount = scenes.sumOf { countWords(it.prose) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 5.dp)
+            .padding(bottom = 4.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 2.dp),
+                .height(38.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             DisclosureChevron(
@@ -557,39 +624,52 @@ private fun ChapterBlock(
                 onClick = { expanded = !expanded }
             )
 
-            InlineTitle(
+            ManageableTitle(
                 id = chapter.id,
-                title = chapter.title,
+                rawTitle = chapter.title,
+                displayTitle = chapterDisplayTitle(chapter.title, chapterIndex),
+                emptyDraftWhenDefault = isDefaultChapterTitle(chapter.title),
                 modifier = Modifier.weight(1f),
                 color = NovellumTextSoft,
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                uppercaseWhenDisplay = true,
-                onRename = onRenameChapter
+                onRename = onRenameChapter,
+                onDeleteRequest = {
+                    if (scenes.isEmpty()) onDeleteChapter()
+                    else showChapterDelete = true
+                }
             )
 
-            MiniAction("+", onClick = onRequestCreateScene)
+            TreeControl(
+                symbol = "+",
+                description = "New scene",
+                onClick = {
+                    expanded = true
+                    onCreateScene()
+                }
+            )
         }
 
         if (expanded) {
-            scenes.forEach { scene ->
+            scenes.forEachIndexed { sceneIndex, scene ->
                 val selected = scene.id == selectedSceneId
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 27.dp, top = 1.dp, bottom = 1.dp)
+                        .padding(start = 34.dp, top = 1.dp, bottom = 1.dp)
+                        .height(34.dp)
                         .background(
                             if (selected) NovellumAccentSoft else Color.Transparent,
                             RoundedCornerShape(4.dp)
                         )
-                        .padding(horizontal = 7.dp, vertical = 5.dp),
+                        .padding(start = 7.dp, end = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
                             .width(2.dp)
-                            .height(17.dp)
+                            .height(18.dp)
                             .background(
                                 if (selected) NovellumAccent else Color.Transparent,
                                 RoundedCornerShape(50)
@@ -597,19 +677,54 @@ private fun ChapterBlock(
                     )
                     Spacer(Modifier.width(8.dp))
 
-                    InlineTitle(
+                    ManageableTitle(
                         id = scene.id,
-                        title = scene.title,
+                        rawTitle = scene.title,
+                        displayTitle = sceneDisplayTitle(scene.title, sceneIndex),
+                        emptyDraftWhenDefault = isDefaultSceneTitle(scene.title),
                         modifier = Modifier.weight(1f),
                         color = if (selected) NovellumText else NovellumTextSoft,
                         fontSize = 11.sp,
                         fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
                         onTap = { onSelectScene(scene.id) },
-                        onRename = { onRenameScene(scene.id, it) }
+                        onRename = { onRenameScene(scene.id, it) },
+                        onDeleteRequest = {
+                            if (scene.prose.isBlank()) onDeleteScene(scene.id)
+                            else sceneDeleteTarget = scene
+                        }
                     )
                 }
             }
         }
+    }
+
+    if (showChapterDelete) {
+        TypedDeleteDialog(
+            title = "Delete ${chapterDisplayTitle(chapter.title, chapterIndex)}?",
+            summary = buildString {
+                append("This chapter contains ${scenes.size} scene")
+                if (scenes.size != 1) append("s")
+                if (chapterWordCount > 0) append(" and ${chapterWordCount} words")
+                append(". Type DELETE to move it to Trash.")
+            },
+            onDismiss = { showChapterDelete = false },
+            onConfirm = {
+                showChapterDelete = false
+                onDeleteChapter()
+            }
+        )
+    }
+
+    sceneDeleteTarget?.let { scene ->
+        HoldDeleteDialog(
+            title = "Delete scene?",
+            summary = "This scene contains ${countWords(scene.prose)} words. Press and hold DELETE to move it to Trash.",
+            onDismiss = { sceneDeleteTarget = null },
+            onConfirm = {
+                sceneDeleteTarget = null
+                onDeleteScene(scene.id)
+            }
+        )
     }
 }
 
@@ -619,101 +734,146 @@ private fun DisclosureChevron(
     visible: Boolean,
     onClick: () -> Unit
 ) {
+    TreeControl(
+        symbol = if (expanded) "⌄" else "›",
+        description = if (expanded) "Collapse" else "Expand",
+        enabled = visible,
+        invisibleWhenDisabled = true,
+        onClick = onClick
+    )
+}
+
+@Composable
+private fun TreeControl(
+    symbol: String,
+    description: String,
+    enabled: Boolean = true,
+    invisibleWhenDisabled: Boolean = false,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
-            .width(27.dp)
-            .height(30.dp),
+            .size(36.dp)
+            .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        if (visible) {
+        if (enabled || !invisibleWhenDisabled) {
             Text(
-                text = if (expanded) "⌄" else "›",
-                color = NovellumTextDim,
-                fontSize = 15.sp,
-                modifier = Modifier
-                    .clickable(onClick = onClick)
-                    .padding(horizontal = 7.dp, vertical = 5.dp)
+                text = symbol,
+                color = if (enabled) NovellumTextSoft else NovellumTextDim.copy(alpha = 0.35f),
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Medium
             )
         }
     }
 }
 
 @Composable
-private fun InlineTitle(
+private fun ManageableTitle(
     id: String,
-    title: String,
+    rawTitle: String,
+    displayTitle: String,
+    emptyDraftWhenDefault: Boolean,
     modifier: Modifier = Modifier,
     color: Color,
     fontSize: androidx.compose.ui.unit.TextUnit,
     fontWeight: FontWeight = FontWeight.Normal,
-    uppercaseWhenDisplay: Boolean = false,
     onTap: (() -> Unit)? = null,
-    onRename: (String) -> Unit
+    onRename: (String) -> Unit,
+    onDeleteRequest: (() -> Unit)?
 ) {
     var editing by remember(id) { mutableStateOf(false) }
-    var draft by remember(id, title) { mutableStateOf(title) }
+    var draft by remember(id, rawTitle) { mutableStateOf(rawTitle) }
     var hadFocus by remember(id) { mutableStateOf(false) }
     val focusRequester = remember(id) { FocusRequester() }
+
+    fun beginEditing() {
+        draft = if (emptyDraftWhenDefault) "" else rawTitle
+        editing = true
+    }
 
     fun commit() {
         val clean = draft.trim()
         hadFocus = false
         editing = false
-        if (clean.isNotEmpty() && clean != title) onRename(clean)
-        else draft = title
+        if (clean.isNotEmpty() && clean != rawTitle) onRename(clean)
+        else draft = rawTitle
     }
 
     if (editing) {
         BackHandler(enabled = true) {
             hadFocus = false
-            draft = title
+            draft = rawTitle
             editing = false
         }
 
-        BasicTextField(
-            value = draft,
-            onValueChange = { draft = it },
-            singleLine = true,
-            textStyle = TextStyle(
-                color = NovellumText,
-                fontSize = fontSize,
-                fontWeight = fontWeight
-            ),
-            cursorBrush = SolidColor(NovellumAccent),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { commit() }),
+        Row(
             modifier = modifier
-                .background(NovellumBlack, RoundedCornerShape(3.dp))
-                .border(1.dp, NovellumAccent, RoundedCornerShape(3.dp))
-                .padding(horizontal = 6.dp, vertical = 4.dp)
-                .focusRequester(focusRequester)
-                .onFocusChanged { state ->
-                    if (state.isFocused) {
-                        hadFocus = true
-                    } else if (hadFocus && editing) {
-                        commit()
+                .background(NovellumBlack, RoundedCornerShape(4.dp))
+                .border(1.dp, NovellumAccent, RoundedCornerShape(4.dp)),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BasicTextField(
+                value = draft,
+                onValueChange = { draft = it },
+                singleLine = true,
+                textStyle = TextStyle(
+                    color = NovellumText,
+                    fontSize = fontSize,
+                    fontWeight = fontWeight
+                ),
+                cursorBrush = SolidColor(NovellumAccent),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { commit() }),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 7.dp, vertical = 5.dp)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { state ->
+                        if (state.isFocused) {
+                            hadFocus = true
+                        } else if (hadFocus && editing) {
+                            commit()
+                        }
                     }
+            )
+
+            if (onDeleteRequest != null) {
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clickable {
+                            hadFocus = false
+                            editing = false
+                            onDeleteRequest()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "×",
+                        color = NovellumDanger,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
-        )
+            }
+        }
 
         LaunchedEffect(editing) {
             if (editing) focusRequester.requestFocus()
         }
     } else {
         Text(
-            text = if (uppercaseWhenDisplay) title.uppercase() else title,
+            text = displayTitle,
             color = color,
             fontSize = fontSize,
             fontWeight = fontWeight,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = modifier.pointerInput(id, title) {
+            modifier = modifier.pointerInput(id, rawTitle, displayTitle) {
                 detectTapGestures(
                     onTap = { onTap?.invoke() },
-                    onLongPress = {
-                        draft = title
-                        editing = true
-                    }
+                    onLongPress = { beginEditing() }
                 )
             }
         )
@@ -724,6 +884,7 @@ private fun InlineTitle(
 private fun SceneEditor(
     scene: SceneEntity,
     chapterTitle: String?,
+    sceneDisplayTitle: String,
     onRenameScene: (String) -> Unit,
     onSave: (String, Boolean) -> Unit,
     onDelete: () -> Unit
@@ -738,7 +899,7 @@ private fun SceneEditor(
     }
     val undoStack = remember(scene.id) { mutableStateListOf<TextFieldValue>() }
     val redoStack = remember(scene.id) { mutableStateListOf<TextFieldValue>() }
-    var showDeleteConfirm by remember(scene.id) { mutableStateOf(false) }
+    var showSceneDelete by remember(scene.id) { mutableStateOf(false) }
     var saveLabel by remember(scene.id) { mutableStateOf("Autosaved") }
     val clipboard = LocalClipboardManager.current
 
@@ -871,13 +1032,19 @@ private fun SceneEditor(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                InlineTitle(
+                ManageableTitle(
                     id = scene.id + "-header",
-                    title = scene.title,
+                    rawTitle = scene.title,
+                    displayTitle = sceneDisplayTitle,
+                    emptyDraftWhenDefault = isDefaultSceneTitle(scene.title),
                     color = NovellumText,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    onRename = onRenameScene
+                    onRename = onRenameScene,
+                    onDeleteRequest = {
+                        if (scene.prose.isBlank()) onDelete()
+                        else showSceneDelete = true
+                    }
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
@@ -990,47 +1157,21 @@ private fun SceneEditor(
                 Spacer(Modifier.width(14.dp))
             }
 
-            Text(
-                "Delete scene",
-                color = NovellumDanger,
-                fontSize = 9.sp,
-                modifier = Modifier
-                    .clickable { showDeleteConfirm = true }
-                    .padding(vertical = 7.dp)
-            )
         }
     }
 
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            containerColor = NovellumSidebar,
-            titleContentColor = NovellumText,
-            textContentColor = NovellumTextSoft,
-            title = { Text("Delete Scene?") },
-            text = {
-                Text(
-                    "This removes “${scene.title}” from the manuscript. " +
-                        "This action cannot be undone from this screen."
-                )
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel", color = NovellumTextSoft)
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteConfirm = false
-                        onDelete()
-                    }
-                ) {
-                    Text("Delete", color = NovellumDanger)
-                }
+    if (showSceneDelete) {
+        HoldDeleteDialog(
+            title = "Delete scene?",
+            summary = "This scene contains ${countWords(scene.prose)} words. Press and hold DELETE to move it to Trash.",
+            onDismiss = { showSceneDelete = false },
+            onConfirm = {
+                showSceneDelete = false
+                onDelete()
             }
         )
     }
+
 }
 
 @Composable
@@ -1080,7 +1221,7 @@ private fun ToolButton(
 ) {
     Text(
         text = label,
-        color = if (enabled) NovellumTextSoft else NovellumTextDim.copy(alpha = 0.45f),
+        color = if (enabled) NovellumText else NovellumTextDim.copy(alpha = 0.42f),
         fontSize = 11.sp,
         fontWeight = fontWeight,
         fontStyle = fontStyle,
@@ -1102,13 +1243,63 @@ private fun ToolbarDivider() {
 }
 
 @Composable
-private fun NameDialog(
+private fun HoldDeleteDialog(
     title: String,
-    label: String,
+    summary: String,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: () -> Unit
 ) {
-    var value by remember(title) { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = NovellumSidebar,
+        titleContentColor = NovellumText,
+        textContentColor = NovellumTextSoft,
+        title = { Text(title) },
+        text = { Text(summary) },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = NovellumTextSoft)
+            }
+        },
+        confirmButton = {
+            Box(
+                modifier = Modifier
+                    .background(
+                        NovellumDanger.copy(alpha = 0.12f),
+                        RoundedCornerShape(5.dp)
+                    )
+                    .border(
+                        1.dp,
+                        NovellumDanger.copy(alpha = 0.55f),
+                        RoundedCornerShape(5.dp)
+                    )
+                    .pointerInput(Unit) {
+                        detectTapGestures(onLongPress = { onConfirm() })
+                    }
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "HOLD DELETE",
+                    color = NovellumDanger,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.7.sp
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun TypedDeleteDialog(
+    title: String,
+    summary: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    var confirmation by remember(title) { mutableStateOf("") }
+    val confirmed = confirmation == "DELETE"
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1117,18 +1308,16 @@ private fun NameDialog(
         textContentColor = NovellumTextSoft,
         title = { Text(title) },
         text = {
-            OutlinedTextField(
-                value = value,
-                onValueChange = { value = it },
-                label = { Text(label) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        if (value.isNotBlank()) onConfirm(value)
-                    }
+            Column {
+                Text(summary)
+                Spacer(Modifier.height(14.dp))
+                OutlinedTextField(
+                    value = confirmation,
+                    onValueChange = { confirmation = it },
+                    singleLine = true,
+                    label = { Text("Type DELETE") }
                 )
-            )
+            }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
@@ -1136,13 +1325,10 @@ private fun NameDialog(
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = value.isNotBlank(),
-                onClick = { onConfirm(value) }
-            ) {
+            TextButton(enabled = confirmed, onClick = onConfirm) {
                 Text(
-                    "Create",
-                    color = if (value.isNotBlank()) NovellumAccent else NovellumTextDim
+                    "Move to Trash",
+                    color = if (confirmed) NovellumDanger else NovellumTextDim
                 )
             }
         }

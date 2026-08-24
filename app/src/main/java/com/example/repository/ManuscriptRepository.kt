@@ -127,6 +127,8 @@ class ManuscriptRepository(
     ) {
         database.withTransaction {
             val scene = dao.getSceneById(sceneId) ?: return@withTransaction
+            val chapter = dao.getChapterById(scene.chapterId) ?: return@withTransaction
+            val realProjectId = chapter.projectId
             val isClearing = scene.prose.isNotEmpty() && newProse.isEmpty()
 
             if (isClearing && !isUserIntentClear) {
@@ -145,7 +147,7 @@ class ManuscriptRepository(
             if (isClearing) {
                 val checkpoint = CheckpointEntity(
                     id = generateId(),
-                    projectId = scene.chapterId,
+                    projectId = realProjectId,
                     affectedEntityType = "SCENE",
                     affectedEntityId = scene.id,
                     reason = "User intentionally cleared scene",
@@ -159,7 +161,7 @@ class ManuscriptRepository(
             } else if (scene.prose != newProse) {
                 val revision = RevisionEntity(
                     id = generateId(),
-                    projectId = scene.chapterId,
+                    projectId = realProjectId,
                     entityType = "SCENE",
                     entityId = scene.id,
                     operationType = "UPDATE_PROSE",
@@ -176,14 +178,104 @@ class ManuscriptRepository(
         }
     }
 
+    suspend fun deleteProjectSoft(projectId: String) {
+        database.withTransaction {
+            val project = dao.getProjectById(projectId) ?: return@withTransaction
+            val beforeJsonStr = json.encodeToString(project)
+            val now = System.currentTimeMillis()
+
+            val checkpoint = CheckpointEntity(
+                id = generateId(),
+                projectId = project.id,
+                affectedEntityType = "PROJECT",
+                affectedEntityId = project.id,
+                reason = "User deleted project",
+                humanLabel = "Before deletion",
+                schemaVersion = 1,
+                payloadJson = beforeJsonStr,
+                payloadHash = hashString(beforeJsonStr),
+                createdAt = now
+            )
+            dao.insertCheckpoint(checkpoint)
+
+            val updatedProject = project.copy(
+                isDeleted = true,
+                deletedAt = now,
+                updatedAt = now
+            )
+            dao.updateProject(updatedProject)
+
+            dao.insertRevision(
+                RevisionEntity(
+                    id = generateId(),
+                    projectId = project.id,
+                    entityType = "PROJECT",
+                    entityId = project.id,
+                    operationType = "DELETE",
+                    beforeJson = beforeJsonStr,
+                    afterJson = json.encodeToString(updatedProject),
+                    createdAt = now,
+                    reason = "Soft delete",
+                    groupId = null
+                )
+            )
+        }
+    }
+
+    suspend fun deleteChapterSoft(chapterId: String) {
+        database.withTransaction {
+            val chapter = dao.getChapterById(chapterId) ?: return@withTransaction
+            val beforeJsonStr = json.encodeToString(chapter)
+            val now = System.currentTimeMillis()
+
+            val checkpoint = CheckpointEntity(
+                id = generateId(),
+                projectId = chapter.projectId,
+                affectedEntityType = "CHAPTER",
+                affectedEntityId = chapter.id,
+                reason = "User deleted chapter",
+                humanLabel = "Before deletion",
+                schemaVersion = 1,
+                payloadJson = beforeJsonStr,
+                payloadHash = hashString(beforeJsonStr),
+                createdAt = now
+            )
+            dao.insertCheckpoint(checkpoint)
+
+            val updatedChapter = chapter.copy(
+                isDeleted = true,
+                deletedAt = now,
+                updatedAt = now
+            )
+            dao.updateChapter(updatedChapter)
+
+            dao.insertRevision(
+                RevisionEntity(
+                    id = generateId(),
+                    projectId = chapter.projectId,
+                    entityType = "CHAPTER",
+                    entityId = chapter.id,
+                    operationType = "DELETE",
+                    beforeJson = beforeJsonStr,
+                    afterJson = json.encodeToString(updatedChapter),
+                    createdAt = now,
+                    reason = "Soft delete",
+                    groupId = null
+                )
+            )
+        }
+    }
+
     suspend fun deleteSceneSoft(sceneId: String) {
         database.withTransaction {
             val scene = dao.getSceneById(sceneId) ?: return@withTransaction
+            val chapter = dao.getChapterById(scene.chapterId) ?: return@withTransaction
+            val realProjectId = chapter.projectId
             val beforeJsonStr = json.encodeToString(scene)
 
             val checkpoint = CheckpointEntity(
                 id = generateId(),
-                projectId = scene.chapterId,
+                projectId = realProjectId,
                 affectedEntityType = "SCENE",
                 affectedEntityId = scene.id,
                 reason = "User deleted scene",
@@ -204,7 +296,7 @@ class ManuscriptRepository(
 
             val revision = RevisionEntity(
                 id = generateId(),
-                projectId = scene.chapterId,
+                projectId = realProjectId,
                 entityType = "SCENE",
                 entityId = scene.id,
                 operationType = "DELETE",

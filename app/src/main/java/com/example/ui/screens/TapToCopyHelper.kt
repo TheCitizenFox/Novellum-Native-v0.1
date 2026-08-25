@@ -34,23 +34,33 @@ fun Modifier.tapToCopyGestures(
         timeoutMillis: Long,
         consumeChanges: Boolean
     ): HoldResult {
-        val result = withTimeoutOrNull(timeoutMillis) {
-            while (true) {
+        val result: HoldResult? = withTimeoutOrNull(timeoutMillis) {
+            var outcome: HoldResult? = null
+
+            while (outcome == null) {
                 val event = awaitPointerEvent(PointerEventPass.Main)
                 val change = event.changes.firstOrNull { it.id == pointerId }
-                    ?: return@withTimeoutOrNull HoldResult.RELEASED
+
+                if (change == null) {
+                    outcome = HoldResult.RELEASED
+                    continue
+                }
 
                 if ((change.position - startPosition).getDistance() > slop) {
-                    return@withTimeoutOrNull HoldResult.MOVED
+                    outcome = HoldResult.MOVED
+                    continue
                 }
 
                 if (consumeChanges) change.consume()
 
                 if (change.changedToUp()) {
-                    return@withTimeoutOrNull HoldResult.RELEASED
+                    outcome = HoldResult.RELEASED
                 }
             }
+
+            outcome ?: HoldResult.RELEASED
         }
+
         return result ?: HoldResult.TIMEOUT
     }
 
@@ -62,21 +72,30 @@ fun Modifier.tapToCopyGestures(
         if (hasActiveSelection()) {
             // While a copied range is active, a quick stationary tap extends/dismisses.
             // Movement is deliberately left unconsumed so vertical drag scrolling wins.
-            val quickTap = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-                while (true) {
+            val quickTap: Boolean = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                var outcome: Boolean? = null
+
+                while (outcome == null) {
                     val event = awaitPointerEvent(PointerEventPass.Main)
                     val change = event.changes.firstOrNull { it.id == pointerId }
-                        ?: return@withTimeoutOrNull false
+
+                    if (change == null) {
+                        outcome = false
+                        continue
+                    }
 
                     if ((change.position - startPosition).getDistance() > slop) {
-                        return@withTimeoutOrNull false
+                        outcome = false
+                        continue
                     }
 
                     if (change.changedToUp()) {
                         change.consume()
-                        return@withTimeoutOrNull true
+                        outcome = true
                     }
                 }
+
+                outcome ?: false
             } ?: false
 
             if (quickTap) {

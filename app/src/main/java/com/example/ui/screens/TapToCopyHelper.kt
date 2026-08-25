@@ -8,107 +8,135 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ViewConfiguration
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+
+private enum class HoldResult {
+    TIMEOUT,
+    RELEASED,
+    MOVED
+}
 
 fun Modifier.tapToCopyGestures(
     viewConfiguration: ViewConfiguration,
-    hasActiveSelection: Boolean,
+    hasActiveSelection: () -> Boolean,
     isTapOnText: (Offset) -> Boolean,
     onExtendSelection: () -> Unit,
     onDismissSelection: () -> Unit,
     onLineCapture: (Offset) -> Unit,
-    onParaCapture: (Offset) -> Unit
-): Modifier = this.pointerInput(hasActiveSelection) {
+    onParaCapture: (Offset) -> Unit,
+    onCaptureGestureFinished: () -> Unit
+): Modifier = pointerInput(Unit) {
     val slop = viewConfiguration.touchSlop
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        var isCanceled = false
 
-        if (hasActiveSelection) {
-            var upEvent = false
-            withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-                while (true) {
-                    val event = awaitPointerEvent(PointerEventPass.Main)
-                    val change = event.changes.first()
-                    if ((change.position - down.position).getDistance() > slop) {
-                        isCanceled = true
-                        break
-                    }
-                    if (change.changedToUp()) {
-                        upEvent = true
-                        change.consume()
-                        break
-                    }
+    suspend fun androidx.compose.ui.input.pointer.AwaitPointerEventScope.waitForStage(
+        pointerId: androidx.compose.ui.input.pointer.PointerId,
+        startPosition: Offset,
+        timeoutMillis: Long,
+        consumeChanges: Boolean
+    ): HoldResult {
+        val result = withTimeoutOrNull(timeoutMillis) {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Main)
+                val change = event.changes.firstOrNull { it.id == pointerId }
+                    ?: return@withTimeoutOrNull HoldResult.RELEASED
+
+                if ((change.position - startPosition).getDistance() > slop) {
+                    return@withTimeoutOrNull HoldResult.MOVED
+                }
+
+                if (consumeChanges) change.consume()
+
+                if (change.changedToUp()) {
+                    return@withTimeoutOrNull HoldResult.RELEASED
                 }
             }
-            if (!isCanceled && upEvent) {
-                if (isTapOnText(down.position)) {
-                    onExtendSelection()
-                } else {
-                    onDismissSelection()
+        }
+        return result ?: HoldResult.TIMEOUT
+    }
+
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false)
+        val pointerId = down.id
+        val startPosition = down.position
+
+        if (hasActiveSelection()) {
+            // While a copied range is active, a quick stationary tap extends/dismisses.
+            // Movement is deliberately left unconsumed so vertical drag scrolling wins.
+            val quickTap = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Main)
+                    val change = event.changes.firstOrNull { it.id == pointerId }
+                        ?: return@withTimeoutOrNull false
+
+                    if ((change.position - startPosition).getDistance() > slop) {
+                        return@withTimeoutOrNull false
+                    }
+
+                    if (change.changedToUp()) {
+                        change.consume()
+                        return@withTimeoutOrNull true
+                    }
                 }
+            } ?: false
+
+            if (quickTap) {
+                if (isTapOnText(startPosition)) onExtendSelection()
+                else onDismissSelection()
             }
             return@awaitEachGesture
         }
 
-        var lineCaptured = false
-        try {
-            withTimeout(300L) {
-                while (true) {
-                    val event = awaitPointerEvent(PointerEventPass.Main)
-                    val change = event.changes.first()
-                    if ((change.position - down.position).getDistance() > slop) {
-                        isCanceled = true
-                        break
-                    }
-                    if (change.changedToUp()) {
-                        isCanceled = true
-                        break
-                    }
-                }
+        when (
+            waitForStage(
+                pointerId = pointerId,
+                startPosition = startPosition,
+                timeoutMillis = 300L,
+                consumeChanges = false
+            )
+        ) {
+            HoldResult.RELEASED -> {
+                // Ordinary quick tap: leave it untouched for BasicTextField cursor placement.
+                return@awaitEachGesture
             }
-        } catch (e: TimeoutCancellationException) {
-            if (!isCanceled && isTapOnText(down.position)) {
-                lineCaptured = true
-                onLineCapture(down.position)
+            HoldResult.MOVED -> {
+                // Ordinary drag/scroll: leave it untouched.
+                return@awaitEachGesture
             }
+            HoldResult.TIMEOUT -> Unit
         }
 
-        if (lineCaptured) {
-            var paraCaptured = false
-            try {
-                withTimeout(400L) {
-                    while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Main)
-                        val change = event.changes.first()
-                        change.consume()
-                        if ((change.position - down.position).getDistance() > slop) {
-                            isCanceled = true
-                            break
-                        }
-                        if (change.changedToUp()) {
-                            break
-                        }
-                    }
-                }
-            } catch (e: TimeoutCancellationException) {
-                if (!isCanceled) {
-                    paraCaptured = true
-                    onParaCapture(down.position)
-                }
+        if (!isTapOnText(startPosition)) return@awaitEachGesture
+
+        onLineCapture(startPosition)
+
+        when (
+            waitForStage(
+                pointerId = pointerId,
+                startPosition = startPosition,
+                timeoutMillis = 400L,
+                consumeChanges = true
+            )
+        ) {
+            HoldResult.RELEASED -> {
+                // The short-hold gesture is complete. Do not wait for another release.
+                onCaptureGestureFinished()
+                return@awaitEachGesture
             }
-            
-            // Wait for release if not already released
-            while (true) {
-                val event = awaitPointerEvent(PointerEventPass.Main)
-                val change = event.changes.first()
-                change.consume()
-                if (change.changedToUp()) {
-                    break
-                }
+            HoldResult.MOVED -> {
+                onCaptureGestureFinished()
+                return@awaitEachGesture
             }
+            HoldResult.TIMEOUT -> onParaCapture(startPosition)
         }
+
+        // Paragraph capture occurred while the same finger is still down.
+        // Consume only the remainder of this physical gesture, then finish.
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Main)
+            val change = event.changes.firstOrNull { it.id == pointerId } ?: break
+            change.consume()
+            if (change.changedToUp()) break
+        }
+        onCaptureGestureFinished()
     }
 }

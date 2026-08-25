@@ -36,6 +36,62 @@ class ManuscriptRepository(
     fun getSceneFlow(sceneId: String): Flow<SceneEntity?> = dao.getSceneFlow(sceneId)
     suspend fun getProjectById(projectId: String): ProjectEntity? = dao.getProjectById(projectId)
 
+    suspend fun getFullProjectJson(projectId: String): String? {
+        val project = dao.getProjectById(projectId) ?: return null
+        val chapters = dao.getChaptersForProjectSync(projectId)
+        val scenes = dao.getScenesForProjectSync(projectId)
+        val beats = dao.getBeatsForProjectSync(projectId)
+        val snippets = dao.getSnippetsForProjectSync(projectId)
+        val stagingItems = dao.getStagingItemsForProjectSync(projectId)
+
+        val backup = com.example.data.model.ProjectBackup(
+            schemaVersion = 1,
+            exportedAt = System.currentTimeMillis(),
+            appName = "Novellum",
+            project = project,
+            chapters = chapters,
+            scenes = scenes,
+            beats = beats,
+            snippets = snippets,
+            stagingItems = stagingItems
+        )
+
+        return json.encodeToString(backup)
+    }
+
+    suspend fun getFullProjectMarkdown(projectId: String): String? {
+        val project = dao.getProjectById(projectId) ?: return null
+        val chapters = dao.getChaptersForProjectSync(projectId)
+        val scenes = dao.getScenesForProjectSync(projectId)
+        val beats = dao.getBeatsForProjectSync(projectId)
+        val sb = StringBuilder()
+
+        sb.append("# ${project.title}\n\n")
+
+        for (chapter in chapters) {
+            sb.append("## ${chapter.title}\n\n")
+            val chapterScenes = scenes.filter { it.chapterId == chapter.id }
+            for (scene in chapterScenes) {
+                sb.append("### ${scene.title}\n\n")
+                if (scene.prose.isNotEmpty()) {
+                    sb.append(scene.prose).append("\n\n")
+                }
+
+                val sceneBeats = beats.filter { it.sceneId == scene.id }
+                if (sceneBeats.isNotEmpty()) {
+                    sb.append("Beats\n\n")
+                    for (beat in sceneBeats) {
+                        val beatText = if (beat.prose.isNotEmpty()) beat.prose else beat.title
+                        sb.append("- ").append(beatText).append("\n")
+                    }
+                    sb.append("\n")
+                }
+            }
+        }
+
+        return sb.toString()
+    }
+
     suspend fun createProject(title: String, description: String) {
         val project = ProjectEntity(
             id = generateId(),
@@ -129,7 +185,7 @@ class ManuscriptRepository(
             val scene = dao.getSceneById(sceneId) ?: return@withTransaction
             val chapter = dao.getChapterById(scene.chapterId) ?: return@withTransaction
             val realProjectId = chapter.projectId
-            val isClearing = scene.prose.isNotEmpty() && newProse.isEmpty()
+            val isClearing = scene.prose.isNotBlank() && newProse.isBlank()
 
             if (isClearing && !isUserIntentClear) {
                 throw IllegalStateException(
@@ -158,6 +214,21 @@ class ManuscriptRepository(
                     createdAt = System.currentTimeMillis()
                 )
                 dao.insertCheckpoint(checkpoint)
+
+                dao.insertRevision(
+                    RevisionEntity(
+                        id = generateId(),
+                        projectId = realProjectId,
+                        entityType = "SCENE",
+                        entityId = scene.id,
+                        operationType = "UPDATE_PROSE_CLEAR",
+                        beforeJson = beforeJsonStr,
+                        afterJson = afterJsonStr,
+                        createdAt = System.currentTimeMillis(),
+                        reason = "Intentional clear",
+                        groupId = null
+                    )
+                )
             } else if (scene.prose != newProse) {
                 val revision = RevisionEntity(
                     id = generateId(),

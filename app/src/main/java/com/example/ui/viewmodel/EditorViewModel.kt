@@ -121,6 +121,19 @@ class EditorViewModel(
         _uiMessage.value = null
     }
 
+    fun clearSceneSelection() {
+        viewModelScope.launch {
+            if (!prepareToLeaveCurrentScene()) return@launch
+            autosaveJob?.cancel()
+            autosaveJob = null
+            _selectedSceneId.value = null
+            activeSceneId = null
+            draftProse = ""
+            savedProse = ""
+            _saveState.value = SaveState.SAVED
+        }
+    }
+
     fun selectScene(sceneId: String) {
         if (_selectedSceneId.value == sceneId) return
         viewModelScope.launch {

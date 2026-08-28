@@ -83,17 +83,17 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val NovellumBlack = Color(0xFF0D1015)
-private val NovellumHeader = Color(0xFF151922)
-private val NovellumSidebar = Color(0xFF181C24)
-private val NovellumCanvas = Color(0xFF11151C)
-private val NovellumEditor = Color(0xFF1A1F29)
-private val NovellumRaised = Color(0xFF232936)
-private val NovellumRaisedSoft = Color(0xFF202631)
-private val NovellumInset = Color(0xFF0F131A)
-private val NovellumLine = Color(0xFF343B48)
-private val NovellumLineSoft = Color(0xFF272D37)
-private val NovellumHighlight = Color(0xFF3D4655)
+private val NovellumBlack = Color(0xFF0A0D12)
+private val NovellumHeader = Color(0xFF0F131A)
+private val NovellumSidebar = Color(0xFF141922)
+private val NovellumCanvas = Color(0xFF0D1218)
+private val NovellumEditor = Color(0xFF151B24)
+private val NovellumRaised = Color(0xFF1D2430)
+private val NovellumRaisedSoft = Color(0xFF191F2A)
+private val NovellumInset = Color(0xFF0B1017)
+private val NovellumLine = Color(0xFF2A313C)
+private val NovellumLineSoft = Color(0xFF202630)
+private val NovellumHighlight = Color(0xFF313A47)
 private val NovellumShadow = Color(0xFF07090D)
 private val NovellumText = Color(0xFFF4F1ED)
 private val NovellumTextSoft = Color(0xFFCAC8C7)
@@ -375,7 +375,7 @@ private fun NovellumTopBar(
                     .shadow(12.dp, RoundedCornerShape(12.dp), ambientColor = NovellumAccent.copy(alpha = 0.30f), spotColor = NovellumShadow)
                     .size(40.dp)
                     .background(NovellumAccent, RoundedCornerShape(12.dp))
-                    .border(1.dp, NovellumAccentGlow.copy(alpha = 0.55f), RoundedCornerShape(12.dp)),
+                    ,
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -400,17 +400,16 @@ private fun NovellumTopBar(
             modifier = Modifier
                 .weight(1f)
                 .horizontalScroll(rememberScrollState())
-                .shadow(8.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.35f), spotColor = NovellumShadow)
-                .background(NovellumInset, RoundedCornerShape(18.dp))
-                .border(1.dp, NovellumHighlight.copy(alpha = 0.18f), RoundedCornerShape(18.dp))
+                .shadow(7.dp, RoundedCornerShape(16.dp), ambientColor = Color.Black.copy(alpha = 0.30f), spotColor = NovellumShadow)
+                .background(NovellumInset, RoundedCornerShape(16.dp))
                 .padding(4.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TopNavItem("Library", false)
-            TopNavItem("Vault", false)
             TopNavItem("Editor", true)
             TopNavItem("Cards", false)
+            TopNavItem("Vault", false)
+            TopNavItem("Library", false)
             TopNavItem("Manuscript", false)
         }
 
@@ -420,13 +419,13 @@ private fun NovellumTopBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             WorkspaceToggleChip(
-                label = "Manuscript",
+                label = "☰",
                 active = manuscriptPanelOpen,
                 onClick = onToggleManuscript
             )
             Spacer(Modifier.width(8.dp))
             WorkspaceToggleChip(
-                label = "Workspace",
+                label = "▥",
                 active = workspacePanelOpen,
                 onClick = onToggleWorkspace
             )
@@ -441,7 +440,7 @@ private fun NovellumTopBar(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = if (hasScene) "Saved locally" else "No scene selected",
+                text = if (hasScene) "Saved" else "No scene selected",
                 color = if (hasScene) NovellumTextSoft else NovellumTextDim,
                 fontSize = 11.sp
             )
@@ -458,26 +457,22 @@ private fun WorkspaceToggleChip(
     val shape = RoundedCornerShape(14.dp)
     Box(
         modifier = Modifier
+            .size(42.dp)
             .shadow(
-                if (active) 8.dp else 4.dp,
+                if (active) 8.dp else 5.dp,
                 shape,
-                ambientColor = Color.Black.copy(alpha = 0.35f),
+                ambientColor = if (active) NovellumAccent.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.28f),
                 spotColor = NovellumShadow
             )
             .background(if (active) NovellumRaised else NovellumInset, shape)
-            .border(
-                1.dp,
-                if (active) NovellumAccent.copy(alpha = 0.42f) else NovellumHighlight.copy(alpha = 0.16f),
-                shape
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 13.dp, vertical = 9.dp)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
             color = if (active) NovellumAccentGlow else NovellumTextSoft,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.Medium,
             fontFamily = FontFamily.SansSerif
         )
     }
@@ -485,31 +480,23 @@ private fun WorkspaceToggleChip(
 
 @Composable
 private fun TopNavItem(label: String, active: Boolean) {
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(13.dp)
     Box(
         modifier = Modifier
             .padding(horizontal = 2.dp)
             .shadow(
-                if (active) 12.dp else 0.dp,
+                if (active) 10.dp else 0.dp,
                 shape,
-                ambientColor = if (active) NovellumAccent.copy(alpha = 0.34f) else Color.Transparent,
+                ambientColor = if (active) NovellumAccent.copy(alpha = 0.20f) else Color.Transparent,
                 spotColor = NovellumShadow
             )
-            .background(
-                if (active) NovellumAccent else Color.Transparent,
-                shape
-            )
-            .border(
-                1.dp,
-                if (active) NovellumAccentGlow.copy(alpha = 0.40f) else Color.Transparent,
-                shape
-            )
-            .padding(horizontal = 22.dp, vertical = 11.dp),
+            .background(if (active) NovellumRaised else Color.Transparent, shape)
+            .padding(horizontal = 18.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = label,
-            color = if (active) Color.White else NovellumTextSoft,
+            text = if (active && label == "Editor") "✎  $label" else label,
+            color = if (active) NovellumAccentGlow else NovellumTextSoft,
             fontSize = 13.sp,
             fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
             fontFamily = FontFamily.SansSerif
@@ -573,7 +560,7 @@ private fun ManuscriptSidebar(
             .padding(start = 10.dp, top = 10.dp, bottom = 10.dp)
             .shadow(14.dp, RoundedCornerShape(20.dp), ambientColor = Color.Black.copy(alpha = 0.38f), spotColor = NovellumShadow)
             .background(NovellumSidebar, RoundedCornerShape(20.dp))
-            .border(1.dp, NovellumHighlight.copy(alpha = 0.18f), RoundedCornerShape(20.dp))
+            
     ) {
         Row(
             modifier = Modifier
@@ -669,7 +656,7 @@ private fun ProjectList(
                         .fillMaxWidth()
                         .shadow(6.dp, RoundedCornerShape(12.dp), ambientColor = Color.Black.copy(alpha = 0.30f), spotColor = NovellumShadow)
                         .background(NovellumRaisedSoft, RoundedCornerShape(12.dp))
-                        .border(1.dp, NovellumHighlight.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                        
                         .padding(horizontal = 11.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -812,7 +799,7 @@ private fun ProjectManuscript(
                 .padding(10.dp)
                 .shadow(7.dp, RoundedCornerShape(14.dp), ambientColor = Color.Black.copy(alpha = 0.30f), spotColor = NovellumShadow)
                 .background(NovellumRaisedSoft, RoundedCornerShape(14.dp))
-                .border(1.dp, NovellumHighlight.copy(alpha = 0.14f), RoundedCornerShape(14.dp))
+                
                 .height(42.dp)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -899,11 +886,6 @@ private fun ChapterBlock(
                     if (selectedAsPreview) NovellumRaised else Color.Transparent,
                     RoundedCornerShape(12.dp)
                 )
-                .border(
-                    1.dp,
-                    if (selectedAsPreview) NovellumAccent.copy(alpha = 0.28f) else Color.Transparent,
-                    RoundedCornerShape(12.dp)
-                )
                 .padding(horizontal = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -951,18 +933,13 @@ private fun ChapterBlock(
                         .height(40.dp)
                         .shadow(
                             if (selected) 12.dp else 0.dp,
-                            RoundedCornerShape(12.dp),
-                            ambientColor = if (selected) NovellumAccent.copy(alpha = 0.32f) else Color.Transparent,
+                            RoundedCornerShape(10.dp),
+                            ambientColor = if (selected) NovellumAccent.copy(alpha = 0.24f) else Color.Transparent,
                             spotColor = NovellumShadow
                         )
                         .background(
-                            if (selected) NovellumAccent else Color.Transparent,
-                            RoundedCornerShape(12.dp)
-                        )
-                        .border(
-                            1.dp,
-                            if (selected) NovellumAccentGlow.copy(alpha = 0.38f) else Color.Transparent,
-                            RoundedCornerShape(12.dp)
+                            if (selected) NovellumAccent.copy(alpha = 0.96f) else Color.Transparent,
+                            RoundedCornerShape(10.dp)
                         )
                         .padding(start = 9.dp, end = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -1063,11 +1040,6 @@ private fun TreeControl(
             )
             .background(
                 if (enabled) NovellumRaisedSoft else Color.Transparent,
-                RoundedCornerShape(11.dp)
-            )
-            .border(
-                1.dp,
-                if (enabled) NovellumHighlight.copy(alpha = 0.13f) else Color.Transparent,
                 RoundedCornerShape(11.dp)
             )
             .clickable(enabled = enabled, onClick = onClick),
@@ -1328,16 +1300,16 @@ private fun SceneEditor(
         modifier = Modifier
             .fillMaxSize()
             .background(NovellumCanvas)
-            .padding(10.dp)
-            .shadow(16.dp, RoundedCornerShape(20.dp), ambientColor = Color.Black.copy(alpha = 0.40f), spotColor = NovellumShadow)
-            .background(NovellumEditor, RoundedCornerShape(20.dp))
-            .border(1.dp, NovellumHighlight.copy(alpha = 0.16f), RoundedCornerShape(20.dp))
+            .padding(8.dp)
+            .shadow(12.dp, RoundedCornerShape(16.dp), ambientColor = Color.Black.copy(alpha = 0.34f), spotColor = NovellumShadow)
+            .background(NovellumEditor, RoundedCornerShape(16.dp))
+            
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(70.dp)
-                .background(NovellumRaisedSoft, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .height(64.dp)
+                .background(NovellumEditor, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 .padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1406,7 +1378,7 @@ private fun SceneEditor(
                     .fillMaxWidth()
                     .shadow(10.dp, RoundedCornerShape(16.dp), ambientColor = Color.Black.copy(alpha = 0.36f), spotColor = NovellumShadow)
                     .background(NovellumInset, RoundedCornerShape(16.dp))
-                    .border(1.dp, NovellumHighlight.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
+                    
                     .padding(horizontal = 42.dp, vertical = 30.dp)
             ) {
                 BasicTextField(
@@ -1441,7 +1413,7 @@ private fun SceneEditor(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)
-                .background(NovellumRaisedSoft, RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
+                .background(NovellumEditor, RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
                 .padding(horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1491,8 +1463,8 @@ private fun EditorToolbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(54.dp)
-            .background(NovellumRaisedSoft)
+            .height(48.dp)
+            .background(NovellumInset)
             .horizontalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1518,11 +1490,11 @@ private fun ToolButton(
     accent: Boolean = false,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(11.dp)
+    val shape = RoundedCornerShape(9.dp)
     Box(
         modifier = Modifier
             .shadow(
-                if (enabled) 7.dp else 0.dp,
+                if (enabled) 5.dp else 0.dp,
                 shape,
                 ambientColor = Color.Black.copy(alpha = 0.32f),
                 spotColor = NovellumShadow
@@ -1535,17 +1507,8 @@ private fun ToolButton(
                 },
                 shape
             )
-            .border(
-                1.dp,
-                when {
-                    !enabled -> Color.Transparent
-                    accent -> NovellumAccent.copy(alpha = 0.38f)
-                    else -> NovellumHighlight.copy(alpha = 0.14f)
-                },
-                shape
-            )
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 7.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -1589,7 +1552,7 @@ private fun WorkspaceRail(symbol: String, onClick: () -> Unit) {
                 .size(width = 14.dp, height = 42.dp)
                 .shadow(4.dp, RoundedCornerShape(9.dp), ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = NovellumShadow)
                 .background(NovellumRaisedSoft, RoundedCornerShape(9.dp))
-                .border(1.dp, NovellumHighlight.copy(alpha = 0.12f), RoundedCornerShape(9.dp)),
+                ,
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -1620,7 +1583,7 @@ private fun AuxiliaryWorkspacePanel(
             .padding(end = 10.dp, top = 10.dp, bottom = 10.dp)
             .shadow(14.dp, RoundedCornerShape(20.dp), ambientColor = Color.Black.copy(alpha = 0.38f), spotColor = NovellumShadow)
             .background(NovellumSidebar, RoundedCornerShape(20.dp))
-            .border(1.dp, NovellumHighlight.copy(alpha = 0.18f), RoundedCornerShape(20.dp))
+            
             .padding(horizontal = 14.dp, vertical = 14.dp)
     ) {
         Row(
@@ -1628,7 +1591,7 @@ private fun AuxiliaryWorkspacePanel(
                 .fillMaxWidth()
                 .shadow(8.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.34f), spotColor = NovellumShadow)
                 .background(NovellumInset, RoundedCornerShape(18.dp))
-                .border(1.dp, NovellumHighlight.copy(alpha = 0.13f), RoundedCornerShape(18.dp))
+                
                 .padding(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1647,11 +1610,7 @@ private fun AuxiliaryWorkspacePanel(
                             if (active) NovellumAccent else Color.Transparent,
                             RoundedCornerShape(14.dp)
                         )
-                        .border(
-                            1.dp,
-                            if (active) NovellumAccentGlow.copy(alpha = 0.36f) else Color.Transparent,
-                            RoundedCornerShape(14.dp)
-                        )
+
                         .clickable { tab = label }
                         .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
@@ -1686,7 +1645,7 @@ private fun AuxiliaryWorkspacePanel(
                         .weight(1f)
                         .shadow(10.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.35f), spotColor = NovellumShadow)
                         .background(NovellumRaised, RoundedCornerShape(18.dp))
-                        .border(1.dp, NovellumHighlight.copy(alpha = 0.15f), RoundedCornerShape(18.dp))
+                        
                         .padding(16.dp)
                 ) {
                     Text(
@@ -1706,7 +1665,7 @@ private fun AuxiliaryWorkspacePanel(
                         .height(44.dp)
                         .shadow(5.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.30f), spotColor = NovellumShadow)
                         .background(NovellumInset, RoundedCornerShape(18.dp))
-                        .border(1.dp, NovellumHighlight.copy(alpha = 0.10f), RoundedCornerShape(18.dp))
+                        
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
@@ -1726,7 +1685,7 @@ private fun AuxiliaryWorkspacePanel(
                             .shadow(12.dp, RoundedCornerShape(20.dp), ambientColor = Color.Black.copy(alpha = 0.38f), spotColor = NovellumShadow)
                             .size(78.dp)
                             .background(NovellumRaised, RoundedCornerShape(20.dp))
-                            .border(1.dp, NovellumHighlight.copy(alpha = 0.15f), RoundedCornerShape(20.dp)),
+                            ,
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -1779,7 +1738,7 @@ private fun WorkspaceSectionCard(
             .fillMaxWidth()
             .shadow(9.dp, RoundedCornerShape(16.dp), ambientColor = Color.Black.copy(alpha = 0.34f), spotColor = NovellumShadow)
             .background(NovellumRaisedSoft, RoundedCornerShape(16.dp))
-            .border(1.dp, NovellumHighlight.copy(alpha = 0.13f), RoundedCornerShape(16.dp))
+            
             .padding(14.dp)
     ) {
         Text(
@@ -1926,17 +1885,17 @@ private fun ChapterPreview(
                 .fillMaxHeight()
                 .widthIn(max = 980.dp)
                 .fillMaxWidth()
-                .shadow(16.dp, RoundedCornerShape(22.dp), ambientColor = Color.Black.copy(alpha = 0.42f), spotColor = NovellumShadow)
-                .background(NovellumEditor, RoundedCornerShape(22.dp))
-                .border(1.dp, NovellumHighlight.copy(alpha = 0.16f), RoundedCornerShape(22.dp))
+                .shadow(16.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.42f), spotColor = NovellumShadow)
+                .background(NovellumEditor, RoundedCornerShape(18.dp))
+                
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 62.dp, vertical = 28.dp),
+                .padding(horizontal = 58.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
                     .background(NovellumRaisedSoft, RoundedCornerShape(999.dp))
-                    .border(1.dp, NovellumHighlight.copy(alpha = 0.13f), RoundedCornerShape(999.dp))
+                    
                     .padding(horizontal = 14.dp, vertical = 7.dp)
             ) {
                 Text(
@@ -2078,10 +2037,10 @@ private fun EmptyEditorState() {
     ) {
         Column(
             modifier = Modifier
-                .widthIn(max = 420.dp)
+                .widthIn(max = 390.dp)
                 .shadow(10.dp, RoundedCornerShape(20.dp), ambientColor = Color.Black.copy(alpha = 0.34f), spotColor = NovellumShadow)
                 .background(NovellumRaisedSoft, RoundedCornerShape(20.dp))
-                .border(1.dp, NovellumHighlight.copy(alpha = 0.13f), RoundedCornerShape(20.dp))
+                
                 .padding(horizontal = 34.dp, vertical = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -2089,7 +2048,7 @@ private fun EmptyEditorState() {
                 modifier = Modifier
                     .size(54.dp)
                     .background(NovellumInset, RoundedCornerShape(16.dp))
-                    .border(1.dp, NovellumHighlight.copy(alpha = 0.10f), RoundedCornerShape(16.dp)),
+                    ,
                 contentAlignment = Alignment.Center
             ) {
                 Text("✎", color = NovellumAccent, fontSize = 24.sp)
@@ -2119,7 +2078,7 @@ private fun DividerLine() {
         modifier = Modifier
             .fillMaxWidth()
             .height(1.dp)
-            .background(NovellumHighlight.copy(alpha = 0.10f))
+            .background(NovellumHighlight.copy(alpha = 0.06f))
     )
 }
 
@@ -2140,11 +2099,6 @@ private fun MiniAction(
             )
             .background(
                 if (enabled) NovellumRaisedSoft else NovellumInset,
-                RoundedCornerShape(10.dp)
-            )
-            .border(
-                1.dp,
-                if (enabled) accent.copy(alpha = 0.22f) else Color.Transparent,
                 RoundedCornerShape(10.dp)
             )
             .clickable(enabled = enabled, onClick = onClick)

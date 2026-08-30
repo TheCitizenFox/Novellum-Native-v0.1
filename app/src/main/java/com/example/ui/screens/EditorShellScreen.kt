@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -54,6 +55,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.pointerInput
@@ -104,6 +109,15 @@ private val NovellumAccentGlow = Color(0xFFFF7548)
 private val NovellumAccentSoft = Color(0xFF39251F)
 private val NovellumDanger = Color(0xFFD96E75)
 private val NovellumSaved = Color(0xFF149653)
+
+// Left-manuscript material values tuned against the approved reference.
+private val SidebarTop = Color(0xFF202329)
+private val SidebarBottom = Color(0xFF181B20)
+private val SidebarRow = Color(0xFF1D2026)
+private val SidebarRowHover = Color(0xFF24272E)
+private val SidebarOrangeHot = Color(0xFFFF7444)
+private val SidebarOrangeDeep = Color(0xFFE9572A)
+private val SidebarIconMuted = Color(0xFF8E9299)
 
 @Composable
 fun EditorShellScreen(viewModel: EditorViewModel) {
@@ -566,39 +580,45 @@ private fun ManuscriptSidebar(
     onBackupJson: () -> Unit,
     onExportMarkdown: () -> Unit
 ) {
+    val panelShape = RoundedCornerShape(18.dp)
     Column(
         modifier = modifier
             .background(NovellumCanvas)
-            .padding(start = 26.dp, top = 10.dp, bottom = 40.dp)
-            .shadow(12.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.38f), spotColor = NovellumShadow)
-            .background(NovellumSidebar, RoundedCornerShape(18.dp))
-            
+            .padding(start = 24.dp, top = 12.dp, bottom = 38.dp)
+            .shadow(
+                elevation = 13.dp,
+                shape = panelShape,
+                ambientColor = Color.Black.copy(alpha = 0.42f),
+                spotColor = Color.Black.copy(alpha = 0.62f)
+            )
+            .background(
+                brush = Brush.verticalGradient(listOf(SidebarTop, NovellumSidebar, SidebarBottom)),
+                shape = panelShape
+            )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(58.dp)
-                .background(NovellumSidebar, RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
-                .padding(horizontal = 20.dp),
+                .height(52.dp)
+                .padding(start = 18.dp, end = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "MANUSCRIPT",
                 color = NovellumAccentGlow,
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 1.4.sp,
+                letterSpacing = 1.05.sp,
+                fontFamily = FontFamily.SansSerif,
                 modifier = Modifier.weight(1f)
             )
 
             if (selectedProjectId == null) {
-                TreeControl("+", description = "New project", onClick = onCreateProject)
+                TreeControl("+", description = "New project", compact = true, onClick = onCreateProject)
             } else {
-                MiniAction("‹ Projects", accent = NovellumTextSoft, onClick = onBackToProjects)
+                MiniAction("‹ Projects", accent = NovellumAccent.copy(alpha = 0.90f), onClick = onBackToProjects)
             }
         }
-
-        DividerLine()
 
         if (selectedProjectId == null) {
             ProjectList(
@@ -732,8 +752,8 @@ private fun ProjectManuscript(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
-                .padding(horizontal = 9.dp),
+                .height(48.dp)
+                .padding(start = 15.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             DisclosureChevron(
@@ -741,6 +761,7 @@ private fun ProjectManuscript(
                 visible = chapters.isNotEmpty(),
                 onClick = { projectExpanded = !projectExpanded }
             )
+            Spacer(Modifier.width(3.dp))
 
             ManageableTitle(
                 id = projectId,
@@ -749,19 +770,21 @@ private fun ProjectManuscript(
                 emptyDraftWhenDefault = isDefaultProjectTitle(projectTitle),
                 modifier = Modifier.weight(1f),
                 color = NovellumText,
-                fontSize = 17.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = FontFamily.Serif,
                 onRename = { onRenameProject(projectId, it) },
                 onDeleteRequest = {
-                    if (projectIsEmpty) onDeleteProject()
-                    else showProjectDelete = true
+                    if (projectIsEmpty) onDeleteProject() else showProjectDelete = true
                 }
             )
 
+            MoreDotsGlyph(color = NovellumTextDim, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.width(6.dp))
             TreeControl(
                 symbol = "+",
                 description = "New chapter",
+                compact = true,
                 onClick = {
                     projectExpanded = true
                     onCreateChapter()
@@ -776,14 +799,16 @@ private fun ProjectManuscript(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 1.0.sp,
-                modifier = Modifier.padding(start = 42.dp, top = 2.dp, bottom = 3.dp)
+                fontFamily = FontFamily.SansSerif,
+                modifier = Modifier.padding(start = 48.dp, top = 3.dp, bottom = 7.dp)
             )
 
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(start = 7.dp, end = 7.dp, bottom = 12.dp)
+                contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 itemsIndexed(chapters, key = { _, item -> item.id }) { chapterIndex, chapter ->
                     ChapterBlock(
@@ -809,33 +834,49 @@ private fun ProjectManuscript(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp)
-                .shadow(7.dp, RoundedCornerShape(14.dp), ambientColor = Color.Black.copy(alpha = 0.30f), spotColor = NovellumShadow)
-                .background(NovellumRaisedSoft, RoundedCornerShape(14.dp))
-                
-                .height(42.dp)
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+                .height(48.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FooterIconButton(symbol = "⇅", description = "Sort")
+            Spacer(Modifier.width(10.dp))
+            Column {
+                Text("Word count", color = NovellumTextDim, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
+                Text(
+                    String.format(Locale.US, "%,d", projectWordCount),
+                    color = NovellumTextSoft,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily.SansSerif
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            FooterIconButton(symbol = "⌕", description = "Search")
+            Spacer(Modifier.width(7.dp))
+            FooterIconButton(symbol = "≡", description = "Filter")
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 15.dp, end = 15.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 "Backup JSON",
                 color = NovellumTextDim,
                 fontSize = 9.sp,
-                modifier = Modifier
-                    .clickable(onClick = onBackupJson)
-                    .padding(vertical = 8.dp)
+                modifier = Modifier.clickable(onClick = onBackupJson).padding(vertical = 6.dp)
             )
-            Text("  •  ", color = NovellumLine, fontSize = 9.sp)
+            Text("  ·  ", color = NovellumLineSoft, fontSize = 9.sp)
             Text(
                 "Export MD",
                 color = NovellumTextDim,
                 fontSize = 9.sp,
-                modifier = Modifier
-                    .clickable(onClick = onExportMarkdown)
-                    .padding(vertical = 8.dp)
+                modifier = Modifier.clickable(onClick = onExportMarkdown).padding(vertical = 6.dp)
             )
             Spacer(Modifier.weight(1f))
-            Text("Words  ${String.format(Locale.US, "%,d", projectWordCount)}", color = NovellumTextSoft, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
+            Text("hold title = manage", color = NovellumTextDim.copy(alpha = 0.65f), fontSize = 8.sp)
         }
     }
 
@@ -851,10 +892,7 @@ private fun ProjectManuscript(
                 append(". Type DELETE to move it to Trash.")
             },
             onDismiss = { showProjectDelete = false },
-            onConfirm = {
-                showProjectDelete = false
-                onDeleteProject()
-            }
+            onConfirm = { showProjectDelete = false; onDeleteProject() }
         )
     }
 }
@@ -877,36 +915,30 @@ private fun ChapterBlock(
     var expanded by rememberSaveable(chapter.id) { mutableStateOf(true) }
     var showChapterDelete by remember(chapter.id) { mutableStateOf(false) }
     var sceneDeleteTarget by remember(chapter.id) { mutableStateOf<SceneEntity?>(null) }
-
     val chapterWordCount = scenes.sumOf { countWords(it.prose) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 4.dp)
+            .padding(bottom = 3.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp)
-                .shadow(
-                    if (selectedAsPreview) 8.dp else 0.dp,
-                    RoundedCornerShape(12.dp),
-                    ambientColor = Color.Black.copy(alpha = 0.30f),
-                    spotColor = NovellumShadow
-                )
+                .height(39.dp)
                 .background(
-                    if (selectedAsPreview) NovellumRaised else Color.Transparent,
-                    RoundedCornerShape(12.dp)
+                    if (selectedAsPreview) SidebarRowHover.copy(alpha = 0.72f) else Color.Transparent,
+                    RoundedCornerShape(9.dp)
                 )
-                .padding(horizontal = 2.dp),
+                .padding(start = 1.dp, end = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            DisclosureChevron(
-                expanded = expanded,
-                visible = scenes.isNotEmpty(),
-                onClick = { expanded = !expanded }
+            DisclosureChevron(expanded = expanded, visible = scenes.isNotEmpty(), onClick = { expanded = !expanded })
+            FolderGlyph(
+                color = if (selectedAsPreview) NovellumAccent else NovellumAccent.copy(alpha = 0.78f),
+                modifier = Modifier.size(18.dp)
             )
+            Spacer(Modifier.width(9.dp))
 
             ManageableTitle(
                 id = chapter.id,
@@ -915,82 +947,75 @@ private fun ChapterBlock(
                 emptyDraftWhenDefault = isDefaultChapterTitle(chapter.title),
                 modifier = Modifier.weight(1f),
                 color = if (selectedAsPreview) NovellumText else NovellumTextSoft,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily.SansSerif,
                 onTap = onSelectChapter,
                 onRename = onRenameChapter,
                 onDeleteRequest = {
-                    if (scenes.isEmpty()) onDeleteChapter()
-                    else showChapterDelete = true
+                    if (scenes.isEmpty()) onDeleteChapter() else showChapterDelete = true
                 }
             )
 
+            MoreDotsGlyph(color = NovellumTextDim.copy(alpha = 0.82f), modifier = Modifier.size(22.dp))
             TreeControl(
                 symbol = "+",
                 description = "New scene",
-                onClick = {
-                    expanded = true
-                    onCreateScene()
-                }
+                compact = true,
+                onClick = { expanded = true; onCreateScene() }
             )
         }
 
         if (expanded) {
             scenes.forEachIndexed { sceneIndex, scene ->
                 val selected = scene.id == selectedSceneId
-
+                val rowShape = RoundedCornerShape(9.dp)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 34.dp, top = 1.dp, bottom = 1.dp)
-                        .height(46.dp)
-                        .shadow(
-                            if (selected) 12.dp else 0.dp,
-                            RoundedCornerShape(10.dp),
-                            ambientColor = if (selected) NovellumAccent.copy(alpha = 0.24f) else Color.Transparent,
-                            spotColor = NovellumShadow
+                        .padding(start = 32.dp, top = 1.dp, bottom = 1.dp)
+                        .height(40.dp)
+                        .then(
+                            if (selected) Modifier
+                                .shadow(
+                                    elevation = 9.dp,
+                                    shape = rowShape,
+                                    ambientColor = SidebarOrangeHot.copy(alpha = 0.20f),
+                                    spotColor = Color.Black.copy(alpha = 0.46f)
+                                )
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        listOf(SidebarOrangeDeep, SidebarOrangeHot, NovellumAccent)
+                                    ),
+                                    shape = rowShape
+                                )
+                            else Modifier.background(Color.Transparent, rowShape)
                         )
-                        .background(
-                            if (selected) NovellumAccent.copy(alpha = 0.96f) else Color.Transparent,
-                            RoundedCornerShape(10.dp)
-                        )
-                        .padding(start = 9.dp, end = 4.dp),
+                        .padding(horizontal = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .width(3.dp)
-                            .height(20.dp)
-                            .background(
-                                if (selected) Color.White.copy(alpha = 0.70f) else Color.Transparent,
-                                RoundedCornerShape(50)
-                            )
+                    DocumentGlyph(
+                        color = if (selected) Color.White.copy(alpha = 0.96f) else SidebarIconMuted,
+                        modifier = Modifier.size(17.dp)
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "▧",
-                        color = if (selected) Color.White else NovellumTextDim,
-                        fontSize = 15.sp,
-                        fontFamily = FontFamily.SansSerif
-                    )
-                    Spacer(Modifier.width(8.dp))
-
+                    Spacer(Modifier.width(9.dp))
                     ManageableTitle(
                         id = scene.id,
                         rawTitle = scene.title,
                         displayTitle = sceneDisplayTitle(scene.title, sceneIndex),
                         emptyDraftWhenDefault = isDefaultSceneTitle(scene.title),
                         modifier = Modifier.weight(1f),
-                        color = if (selected) Color.White else NovellumTextSoft,
-                        fontSize = 12.sp,
+                        color = if (selected) Color.White else NovellumTextDim,
+                        fontSize = 13.sp,
                         fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+                        fontFamily = FontFamily.SansSerif,
                         onTap = { onSelectScene(scene.id) },
                         onRename = { onRenameScene(scene.id, it) },
                         onDeleteRequest = {
-                            if (scene.prose.isBlank()) onDeleteScene(scene.id)
-                            else sceneDeleteTarget = scene
+                            if (scene.prose.isBlank()) onDeleteScene(scene.id) else sceneDeleteTarget = scene
                         }
                     )
+                    if (selected) MoreDotsGlyph(color = Color.White.copy(alpha = 0.75f), modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -1006,10 +1031,7 @@ private fun ChapterBlock(
                 append(". Type DELETE to move it to Trash.")
             },
             onDismiss = { showChapterDelete = false },
-            onConfirm = {
-                showChapterDelete = false
-                onDeleteChapter()
-            }
+            onConfirm = { showChapterDelete = false; onDeleteChapter() }
         )
     }
 
@@ -1018,10 +1040,7 @@ private fun ChapterBlock(
             title = "Delete scene?",
             summary = "This scene contains ${countWords(scene.prose)} words. Press and hold DELETE to move it to Trash.",
             onDismiss = { sceneDeleteTarget = null },
-            onConfirm = {
-                sceneDeleteTarget = null
-                onDeleteScene(scene.id)
-            }
+            onConfirm = { sceneDeleteTarget = null; onDeleteScene(scene.id) }
         )
     }
 }
@@ -1034,7 +1053,7 @@ private fun DisclosureChevron(
 ) {
     Box(
         modifier = Modifier
-            .size(28.dp)
+            .size(25.dp)
             .clickable(enabled = visible, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -1042,7 +1061,7 @@ private fun DisclosureChevron(
             Text(
                 text = if (expanded) "⌄" else "›",
                 color = NovellumTextSoft,
-                fontSize = 17.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = FontFamily.SansSerif
             )
@@ -1056,20 +1075,23 @@ private fun TreeControl(
     description: String,
     enabled: Boolean = true,
     invisibleWhenDisabled: Boolean = false,
+    compact: Boolean = false,
     onClick: () -> Unit
 ) {
+    val size = if (compact) 30.dp else 38.dp
+    val radius = if (compact) 9.dp else 11.dp
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(size)
             .shadow(
-                if (enabled) 4.dp else 0.dp,
-                RoundedCornerShape(11.dp),
-                ambientColor = Color.Black.copy(alpha = 0.28f),
-                spotColor = NovellumShadow
+                if (enabled) 5.dp else 0.dp,
+                RoundedCornerShape(radius),
+                ambientColor = Color.Black.copy(alpha = 0.34f),
+                spotColor = Color.Black.copy(alpha = 0.54f)
             )
             .background(
-                if (enabled) NovellumRaisedSoft else Color.Transparent,
-                RoundedCornerShape(11.dp)
+                brush = Brush.verticalGradient(listOf(NovellumRaised, NovellumRaisedSoft, NovellumInset)),
+                shape = RoundedCornerShape(radius)
             )
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
@@ -1078,11 +1100,74 @@ private fun TreeControl(
             Text(
                 text = symbol,
                 color = if (enabled) NovellumTextSoft else NovellumTextDim.copy(alpha = 0.35f),
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Medium,
+                fontSize = if (compact) 18.sp else 19.sp,
+                fontWeight = FontWeight.Normal,
                 fontFamily = FontFamily.SansSerif
             )
         }
+    }
+}
+
+@Composable
+private fun FolderGlyph(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val stroke = Stroke(width = 1.7.dp.toPx(), cap = StrokeCap.Round)
+        val path = Path().apply {
+            moveTo(size.width * 0.10f, size.height * 0.30f)
+            lineTo(size.width * 0.38f, size.height * 0.30f)
+            lineTo(size.width * 0.47f, size.height * 0.42f)
+            lineTo(size.width * 0.90f, size.height * 0.42f)
+            lineTo(size.width * 0.90f, size.height * 0.82f)
+            lineTo(size.width * 0.10f, size.height * 0.82f)
+            close()
+        }
+        drawPath(path, color = color, style = stroke)
+    }
+}
+
+@Composable
+private fun DocumentGlyph(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val sw = 1.55.dp.toPx()
+        val stroke = Stroke(width = sw, cap = StrokeCap.Round)
+        val path = Path().apply {
+            moveTo(size.width * 0.23f, size.height * 0.10f)
+            lineTo(size.width * 0.62f, size.height * 0.10f)
+            lineTo(size.width * 0.80f, size.height * 0.28f)
+            lineTo(size.width * 0.80f, size.height * 0.90f)
+            lineTo(size.width * 0.23f, size.height * 0.90f)
+            close()
+            moveTo(size.width * 0.62f, size.height * 0.10f)
+            lineTo(size.width * 0.62f, size.height * 0.29f)
+            lineTo(size.width * 0.80f, size.height * 0.29f)
+        }
+        drawPath(path, color = color, style = stroke)
+        drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.35f, size.height * 0.52f), androidx.compose.ui.geometry.Offset(size.width * 0.68f, size.height * 0.52f), sw, StrokeCap.Round)
+        drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.35f, size.height * 0.68f), androidx.compose.ui.geometry.Offset(size.width * 0.63f, size.height * 0.68f), sw, StrokeCap.Round)
+    }
+}
+
+@Composable
+private fun MoreDotsGlyph(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val r = 1.35.dp.toPx()
+        val cy = size.height / 2f
+        drawCircle(color, r, androidx.compose.ui.geometry.Offset(size.width * 0.32f, cy))
+        drawCircle(color, r, androidx.compose.ui.geometry.Offset(size.width * 0.50f, cy))
+        drawCircle(color, r, androidx.compose.ui.geometry.Offset(size.width * 0.68f, cy))
+    }
+}
+
+@Composable
+private fun FooterIconButton(symbol: String, description: String) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .shadow(5.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.34f), spotColor = Color.Black.copy(alpha = 0.54f))
+            .background(Brush.verticalGradient(listOf(NovellumRaised, NovellumRaisedSoft, NovellumInset)), RoundedCornerShape(18.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(symbol, color = NovellumTextSoft, fontSize = 16.sp, fontFamily = FontFamily.SansSerif)
     }
 }
 

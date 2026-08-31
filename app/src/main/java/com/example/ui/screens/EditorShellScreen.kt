@@ -88,36 +88,34 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// Reference-conformance palette sampled from the approved third mockup.
-private val NovellumBlack = Color(0xFF14171E)
-private val NovellumHeader = Color(0xFF151820)
-private val NovellumSidebar = Color(0xFF1A1D22)
-private val NovellumCanvas = Color(0xFF1C1F24)
-private val NovellumEditor = Color(0xFF1C1F24)
-private val NovellumRaised = Color(0xFF24272E)
-private val NovellumRaisedSoft = Color(0xFF202329)
-private val NovellumInset = Color(0xFF171A20)
-private val NovellumLine = Color(0xFF343840)
-private val NovellumLineSoft = Color(0xFF292D34)
-private val NovellumHighlight = Color(0xFF3B3F48)
-private val NovellumShadow = Color(0xFF0B0D11)
-private val NovellumText = Color(0xFFF1EFEB)
-private val NovellumTextSoft = Color(0xFFC7C5C1)
-private val NovellumTextDim = Color(0xFF8B8D92)
-private val NovellumAccent = Color(0xFFF66838)
-private val NovellumAccentGlow = Color(0xFFFF7548)
-private val NovellumAccentSoft = Color(0xFF39251F)
+// Fresh visual system: dark machined polymer, recessed graphite, and restrained ember light.
+private val NovellumBlack = Color(0xFF0C0F14)
+private val NovellumHeader = Color(0xFF11151C)
+private val NovellumSidebar = Color(0xFF151A21)
+private val NovellumCanvas = Color(0xFF10141A)
+private val NovellumEditor = Color(0xFF141920)
+private val NovellumRaised = Color(0xFF20262F)
+private val NovellumRaisedSoft = Color(0xFF1B2129)
+private val NovellumInset = Color(0xFF0D1117)
+private val NovellumLine = Color(0xFF2A313B)
+private val NovellumLineSoft = Color(0xFF202731)
+private val NovellumHighlight = Color(0xFF3A424D)
+private val NovellumShadow = Color(0xFF05070A)
+private val NovellumText = Color(0xFFF1EFEA)
+private val NovellumTextSoft = Color(0xFFC8C7C3)
+private val NovellumTextDim = Color(0xFF7E858F)
+private val NovellumAccent = Color(0xFFFF6A2A)
+private val NovellumAccentGlow = Color(0xFFFF8A45)
+private val NovellumAccentSoft = Color(0xFF3A2118)
 private val NovellumDanger = Color(0xFFD96E75)
-private val NovellumSaved = Color(0xFF149653)
-
-// Left-manuscript material values tuned against the approved reference.
-private val SidebarTop = Color(0xFF202329)
-private val SidebarBottom = Color(0xFF181B20)
-private val SidebarRow = Color(0xFF1D2026)
-private val SidebarRowHover = Color(0xFF24272E)
-private val SidebarOrangeHot = Color(0xFFFF7444)
-private val SidebarOrangeDeep = Color(0xFFE9572A)
-private val SidebarIconMuted = Color(0xFF8E9299)
+private val NovellumSaved = Color(0xFF49B982)
+private val SidebarTop = Color(0xFF1A2028)
+private val SidebarBottom = Color(0xFF11161C)
+private val SidebarRow = Color(0xFF171C23)
+private val SidebarRowHover = Color(0xFF212832)
+private val SidebarOrangeHot = Color(0xFFFF7A35)
+private val SidebarOrangeDeep = Color(0xFFD94B1B)
+private val SidebarIconMuted = Color(0xFF7D858F)
 
 @Composable
 fun EditorShellScreen(viewModel: EditorViewModel) {
@@ -233,7 +231,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                 if (manuscriptPanelOpen) {
                     ManuscriptSidebar(
                         modifier = Modifier
-                            .width(370.dp)
+                            .width(348.dp)
                             .fillMaxHeight(),
                         projectTitle = selectedProject?.title,
                         projectDisplayTitle = selectedProjectDisplayTitle,
@@ -336,7 +334,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                     WorkspaceRail(symbol = "›", onClick = { workspacePanelOpen = false })
                     AuxiliaryWorkspacePanel(
                         modifier = Modifier
-                            .width(286.dp)
+                            .width(320.dp)
                             .fillMaxHeight(),
                         projectTitle = selectedProjectDisplayTitle,
                         chapterTitle = selectedChapter?.let {
@@ -377,46 +375,48 @@ private fun NovellumTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(96.dp)
-            .background(NovellumBlack)
-            .padding(horizontal = 26.dp, vertical = 12.dp),
+            .height(82.dp)
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF151A21), Color(0xFF0D1117))
+                )
+            )
+            .padding(horizontal = 22.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            modifier = Modifier.width(390.dp),
+            modifier = Modifier.width(330.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .shadow(12.dp, RoundedCornerShape(12.dp), ambientColor = NovellumAccent.copy(alpha = 0.30f), spotColor = NovellumShadow)
+                    .shadow(
+                        16.dp,
+                        RoundedCornerShape(11.dp),
+                        ambientColor = NovellumAccent.copy(alpha = 0.34f),
+                        spotColor = Color.Black.copy(alpha = 0.76f)
+                    )
                     .size(42.dp)
-                    .background(NovellumAccent, RoundedCornerShape(10.dp))
-                    ,
+                    .background(
+                        Brush.verticalGradient(listOf(Color(0xFFFF8A4A), Color(0xFFCA3E18))),
+                        RoundedCornerShape(11.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "N",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.SansSerif
-                )
+                Text("N", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Medium, fontFamily = FontFamily.Serif)
             }
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(13.dp))
             Text(
-                text = "Novellum",
+                "Novellum",
                 color = NovellumText,
-                fontSize = 24.sp,
+                fontSize = 23.sp,
                 fontWeight = FontWeight.SemiBold,
-                fontFamily = FontFamily.SansSerif
+                fontFamily = FontFamily.Serif
             )
         }
 
         Row(
-            modifier = Modifier
-                .weight(1f)
-                .horizontalScroll(rememberScrollState())
-                .padding(vertical = 4.dp),
+            modifier = Modifier.weight(1f),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -428,36 +428,17 @@ private fun NovellumTopBar(
         }
 
         Row(
-            modifier = Modifier.widthIn(min = 310.dp),
+            modifier = Modifier.width(250.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            WorkspaceToggleChip(
-                label = "☰",
-                active = manuscriptPanelOpen,
-                onClick = onToggleManuscript
-            )
-            Spacer(Modifier.width(8.dp))
-            WorkspaceToggleChip(
-                label = "▥",
-                active = workspacePanelOpen,
-                onClick = onToggleWorkspace
-            )
-            Spacer(Modifier.width(14.dp))
-            Box(
-                modifier = Modifier
-                    .size(7.dp)
-                    .background(
-                        if (hasScene) NovellumSaved else NovellumTextDim,
-                        RoundedCornerShape(50)
-                    )
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = if (hasScene) "Saved" else "No scene selected",
-                color = if (hasScene) NovellumTextSoft else NovellumTextDim,
-                fontSize = 11.sp
-            )
+            WorkspaceToggleChip("◷", active = false, onClick = {})
+            Spacer(Modifier.width(9.dp))
+            WorkspaceToggleChip("⚙", active = false, onClick = {})
+            Spacer(Modifier.width(9.dp))
+            WorkspaceToggleChip("▥", active = workspacePanelOpen, onClick = onToggleWorkspace)
+            Spacer(Modifier.width(9.dp))
+            WorkspaceToggleChip("☷", active = manuscriptPanelOpen, onClick = onToggleManuscript)
         }
     }
 }
@@ -468,24 +449,30 @@ private fun WorkspaceToggleChip(
     active: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(50)
     Box(
         modifier = Modifier
-            .size(42.dp)
+            .size(40.dp)
             .shadow(
-                if (active) 8.dp else 5.dp,
+                if (active) 10.dp else 6.dp,
                 shape,
-                ambientColor = if (active) NovellumAccent.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.28f),
-                spotColor = NovellumShadow
+                ambientColor = if (active) NovellumAccent.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.45f),
+                spotColor = Color.Black.copy(alpha = 0.8f)
             )
-            .background(if (active) NovellumRaised else NovellumInset, shape)
+            .background(
+                Brush.verticalGradient(
+                    if (active) listOf(Color(0xFF2A2A2A), Color(0xFF171A20))
+                    else listOf(Color(0xFF232932), Color(0xFF12171D))
+                ),
+                shape
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = label,
+            label,
             color = if (active) NovellumAccentGlow else NovellumTextSoft,
-            fontSize = 17.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = FontFamily.SansSerif
         )
@@ -494,34 +481,45 @@ private fun WorkspaceToggleChip(
 
 @Composable
 private fun TopNavItem(label: String, active: Boolean) {
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(18.dp)
     Box(
         modifier = Modifier
-            .padding(horizontal = 3.dp)
+            .padding(horizontal = 2.dp)
             .shadow(
-                if (active) 10.dp else 0.dp,
+                if (active) 14.dp else 0.dp,
                 shape,
-                ambientColor = if (active) NovellumAccent.copy(alpha = 0.18f) else Color.Transparent,
-                spotColor = NovellumShadow
+                ambientColor = if (active) NovellumAccent.copy(alpha = 0.28f) else Color.Transparent,
+                spotColor = Color.Black.copy(alpha = 0.75f)
             )
-            .background(if (active) NovellumRaised else Color.Transparent, shape)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .background(
+                if (active) {
+                    Brush.verticalGradient(listOf(Color(0xFF352821), Color(0xFF1B191A), Color(0xFF15171C)))
+                } else {
+                    Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent))
+                },
+                shape
+            )
+            .padding(horizontal = 18.dp, vertical = 11.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (active && label == "Editor") {
-                Text(
-                    text = "✎",
-                    color = NovellumAccentGlow,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.SansSerif
-                )
-                Spacer(Modifier.width(8.dp))
+            val icon = when (label) {
+                "Editor" -> "✎"
+                "Cards" -> "▦"
+                "Vault" -> "▣"
+                "Library" -> "▱"
+                else -> "▥"
             }
             Text(
-                text = label,
-                color = if (active) NovellumText else NovellumTextSoft,
+                icon,
+                color = if (active) NovellumAccentGlow else NovellumTextDim,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                label,
+                color = if (active) Color(0xFFFFE7DB) else NovellumTextSoft,
                 fontSize = 13.sp,
                 fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
                 fontFamily = FontFamily.SansSerif
@@ -584,23 +582,23 @@ private fun ManuscriptSidebar(
     Column(
         modifier = modifier
             .background(NovellumCanvas)
-            .padding(start = 24.dp, top = 12.dp, bottom = 38.dp)
+            .padding(start = 18.dp, top = 12.dp, bottom = 18.dp)
             .shadow(
-                elevation = 13.dp,
+                elevation = 18.dp,
                 shape = panelShape,
                 ambientColor = Color.Black.copy(alpha = 0.42f),
                 spotColor = Color.Black.copy(alpha = 0.62f)
             )
             .background(
-                brush = Brush.verticalGradient(listOf(SidebarTop, NovellumSidebar, SidebarBottom)),
+                brush = Brush.verticalGradient(listOf(Color(0xFF1C222B), Color(0xFF151A21), Color(0xFF10151B))),
                 shape = panelShape
             )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
-                .padding(start = 18.dp, end = 14.dp),
+                .height(48.dp)
+                .padding(start = 16.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -1300,132 +1298,63 @@ private fun SceneEditor(
     onConfirmClear: () -> Unit,
     onDelete: () -> Unit
 ) {
-    var editorValue by remember(scene.id) {
-        mutableStateOf(
-            TextFieldValue(
-                text = scene.prose,
-                selection = TextRange(scene.prose.length)
-            )
-        )
-    }
+    var editorValue by remember(scene.id) { mutableStateOf(TextFieldValue(scene.prose, TextRange(scene.prose.length))) }
     val undoStack = remember(scene.id) { mutableStateListOf<TextFieldValue>() }
     val redoStack = remember(scene.id) { mutableStateListOf<TextFieldValue>() }
     var showSceneDelete by remember(scene.id) { mutableStateOf(false) }
 
-    LaunchedEffect(scene.id) {
-        onSceneLoaded(scene.prose)
-    }
+    LaunchedEffect(scene.id) { onSceneLoaded(scene.prose) }
 
     fun pushUndo(value: TextFieldValue) {
         undoStack.add(value)
         if (undoStack.size > 120) undoStack.removeAt(0)
     }
-
     fun applyValue(newValue: TextFieldValue, recordUndo: Boolean = true) {
         val previous = editorValue
         if (newValue == previous) return
-
         val textChanged = newValue.text != previous.text
-        if (recordUndo && textChanged) {
-            pushUndo(previous)
-            redoStack.clear()
-        }
-
+        if (recordUndo && textChanged) { pushUndo(previous); redoStack.clear() }
         editorValue = newValue
-
-        // Cursor-only/selection-only movement must not restart autosave.
-        if (textChanged) {
-            onProseChanged(newValue.text)
-        }
+        if (textChanged) onProseChanged(newValue.text)
     }
-
-    fun selectionBounds(): Pair<Int, Int> {
-        val start = min(editorValue.selection.start, editorValue.selection.end)
-        val end = max(editorValue.selection.start, editorValue.selection.end)
-        return start to end
-    }
-
+    fun selectionBounds(): Pair<Int, Int> = min(editorValue.selection.start, editorValue.selection.end) to max(editorValue.selection.start, editorValue.selection.end)
     fun replaceSelection(replacement: String, cursorOffset: Int = replacement.length) {
         val (start, end) = selectionBounds()
-        val newText = editorValue.text.substring(0, start) +
-            replacement +
-            editorValue.text.substring(end)
-        val cursor = start + cursorOffset
-        applyValue(
-            TextFieldValue(
-                text = newText,
-                selection = TextRange(cursor.coerceIn(0, newText.length))
-            )
-        )
+        val newText = editorValue.text.substring(0, start) + replacement + editorValue.text.substring(end)
+        applyValue(TextFieldValue(newText, TextRange((start + cursorOffset).coerceIn(0, newText.length))))
     }
-
     fun wrapSelection(marker: String) {
         val (start, end) = selectionBounds()
         if (start < end) {
             val selected = editorValue.text.substring(start, end)
             val replacement = marker + selected + marker
-            val newText = editorValue.text.substring(0, start) +
-                replacement +
-                editorValue.text.substring(end)
-
-            applyValue(
-                TextFieldValue(
-                    text = newText,
-                    selection = TextRange(
-                        start + marker.length,
-                        start + marker.length + selected.length
-                    )
-                )
-            )
-        } else {
-            val replacement = marker + marker
-            replaceSelection(replacement, marker.length)
-        }
+            val newText = editorValue.text.substring(0, start) + replacement + editorValue.text.substring(end)
+            applyValue(TextFieldValue(newText, TextRange(start + marker.length, start + marker.length + selected.length)))
+        } else replaceSelection(marker + marker, marker.length)
     }
-
-    fun undo() {
-        if (undoStack.isEmpty()) return
-        val previous = undoStack.removeAt(undoStack.lastIndex)
-        redoStack.add(editorValue)
-        applyValue(previous, recordUndo = false)
-    }
-
-    fun redo() {
-        if (redoStack.isEmpty()) return
-        val next = redoStack.removeAt(redoStack.lastIndex)
-        pushUndo(editorValue)
-        applyValue(next, recordUndo = false)
-    }
+    fun undo() { if (undoStack.isNotEmpty()) { val previous = undoStack.removeAt(undoStack.lastIndex); redoStack.add(editorValue); applyValue(previous, false) } }
+    fun redo() { if (redoStack.isNotEmpty()) { val next = redoStack.removeAt(redoStack.lastIndex); pushUndo(editorValue); applyValue(next, false) } }
 
     val saveLabel = when (saveState) {
-        SaveState.SAVED -> "Autosaved"
+        SaveState.SAVED -> "Saved just now"
         SaveState.UNSAVED -> "Unsaved"
         SaveState.AUTOSAVING -> "Saving…"
         SaveState.BLOCKED_EMPTY_CLEAR -> "Clear needs confirmation"
     }
-
-    val wordCount = remember(editorValue.text) {
-        if (editorValue.text.isBlank()) 0
-        else editorValue.text.trim().split(Regex("\\s+")).size
-    }
-
+    val wordCount = remember(editorValue.text) { if (editorValue.text.isBlank()) 0 else editorValue.text.trim().split(Regex("\\s+")).size }
     val sceneHasMeaningfulContent = editorValue.text.isNotBlank() || scene.prose.isNotBlank()
+    val shellShape = RoundedCornerShape(18.dp)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(NovellumCanvas)
-            .padding(start = 0.dp, top = 10.dp, end = 26.dp, bottom = 8.dp)
-            .shadow(10.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.34f), spotColor = NovellumShadow)
-            .background(NovellumEditor, RoundedCornerShape(18.dp))
-            
+            .padding(start = 4.dp, top = 12.dp, end = 6.dp, bottom = 14.dp)
+            .shadow(18.dp, shellShape, ambientColor = Color.Black.copy(alpha = 0.48f), spotColor = Color.Black.copy(alpha = 0.78f))
+            .background(Brush.verticalGradient(listOf(Color(0xFF181E26), Color(0xFF11161D))), shellShape)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(84.dp)
-                .background(NovellumEditor, RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
-                .padding(horizontal = 28.dp),
+            modifier = Modifier.fillMaxWidth().height(70.dp).padding(horizontal = 26.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -1435,119 +1364,60 @@ private fun SceneEditor(
                     displayTitle = sceneDisplayTitle,
                     emptyDraftWhenDefault = isDefaultSceneTitle(scene.title),
                     color = NovellumText,
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold,
                     onRename = onRenameScene,
-                    onDeleteRequest = {
-                        if (sceneHasMeaningfulContent) showSceneDelete = true
-                        else onDelete()
-                    }
+                    onDeleteRequest = { if (sceneHasMeaningfulContent) showSceneDelete = true else onDelete() }
                 )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = chapterTitle ?: "Scene",
-                    color = NovellumTextDim,
-                    fontSize = 10.sp
-                )
+                if (chapterTitle != null) Text(chapterTitle, color = NovellumTextDim, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
             }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(7.dp).background(if (saveState == SaveState.SAVED) NovellumSaved else NovellumAccent, RoundedCornerShape(50)))
+                Spacer(Modifier.width(7.dp))
+                Text(saveLabel, color = if (saveState == SaveState.SAVED) NovellumTextDim else NovellumAccentGlow, fontSize = 10.sp)
+                Spacer(Modifier.width(22.dp))
+                Box(
+                    Modifier.shadow(8.dp, RoundedCornerShape(14.dp), ambientColor = NovellumAccent.copy(alpha = 0.18f), spotColor = Color.Black.copy(alpha = 0.65f))
+                        .background(Brush.verticalGradient(listOf(Color(0xFF28231F), Color(0xFF17191E))), RoundedCornerShape(14.dp))
+                        .padding(horizontal = 17.dp, vertical = 10.dp)
+                ) { Text("Clean Text ⌄", color = NovellumAccentGlow, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
+            }
+        }
 
-            Text(
-                text = saveLabel,
-                color = when (saveState) {
-                    SaveState.SAVED -> NovellumTextDim
-                    SaveState.AUTOSAVING -> NovellumTextSoft
-                    SaveState.UNSAVED,
-                    SaveState.BLOCKED_EMPTY_CLEAR -> NovellumAccent
-                },
-                fontSize = 10.sp
+        Box(Modifier.padding(horizontal = 18.dp)) {
+            EditorToolbar(
+                canUndo = undoStack.isNotEmpty(), canRedo = redoStack.isNotEmpty(), canSave = saveState == SaveState.UNSAVED,
+                onUndo = ::undo, onRedo = ::redo, onBold = { wrapSelection("**") }, onItalic = { wrapSelection("_") }, onSaveNow = onSaveNow
             )
         }
 
-        DividerLine()
-
-        EditorToolbar(
-            canUndo = undoStack.isNotEmpty(),
-            canRedo = redoStack.isNotEmpty(),
-            canSave = saveState == SaveState.UNSAVED,
-            onUndo = ::undo,
-            onRedo = ::redo,
-            onBold = { wrapSelection("**") },
-            onItalic = { wrapSelection("_") },
-            onSaveNow = onSaveNow
-        )
-
-        DividerLine()
-
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .background(NovellumEditor)
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 30.dp, vertical = 18.dp),
             contentAlignment = Alignment.TopCenter
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .widthIn(max = 1040.dp)
-                    .fillMaxWidth()
-                    .shadow(7.dp, RoundedCornerShape(14.dp), ambientColor = Color.Black.copy(alpha = 0.26f), spotColor = NovellumShadow)
-                    .background(NovellumCanvas, RoundedCornerShape(14.dp))
-                    
-                    .padding(horizontal = 48.dp, vertical = 36.dp)
+                modifier = Modifier.fillMaxHeight().widthIn(max = 900.dp).fillMaxWidth().padding(horizontal = 28.dp, vertical = 22.dp)
             ) {
                 BasicTextField(
                     value = editorValue,
                     onValueChange = { applyValue(it) },
                     modifier = Modifier.fillMaxSize(),
-                    textStyle = TextStyle(
-                        color = NovellumText,
-                        fontSize = 18.sp,
-                        lineHeight = 30.sp,
-                        fontFamily = FontFamily.Serif
-                    ),
+                    textStyle = TextStyle(color = Color(0xFFD8D4CC), fontSize = 18.sp, lineHeight = 31.sp, fontFamily = FontFamily.Serif),
                     cursorBrush = SolidColor(NovellumAccent),
-                    decorationBox = { innerTextField ->
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            if (editorValue.text.isEmpty()) {
-                                Text(
-                                    "Write here…",
-                                    color = NovellumTextDim,
-                                    fontSize = 16.sp,
-                                    lineHeight = 28.sp
-                                )
-                            }
-                            innerTextField()
+                    decorationBox = { inner ->
+                        Box(Modifier.fillMaxSize()) {
+                            if (editorValue.text.isEmpty()) Text("Write here…", color = NovellumTextDim, fontSize = 17.sp, fontFamily = FontFamily.Serif)
+                            inner()
                         }
                     }
                 )
             }
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .background(NovellumEditor, RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                .padding(horizontal = 18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "$wordCount word${if (wordCount == 1) "" else "s"}",
-                color = NovellumTextDim,
-                fontSize = 9.sp
-            )
-
+        Row(Modifier.fillMaxWidth().height(34.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("$wordCount words", color = NovellumTextDim, fontSize = 9.sp)
             Spacer(Modifier.weight(1f))
-
-            if (saveState == SaveState.BLOCKED_EMPTY_CLEAR) {
-                MiniAction(
-                    label = "Confirm clear",
-                    accent = NovellumDanger,
-                    onClick = onConfirmClear
-                )
-                Spacer(Modifier.width(14.dp))
-            }
+            if (saveState == SaveState.BLOCKED_EMPTY_CLEAR) MiniAction("Confirm clear", accent = NovellumDanger, onClick = onConfirmClear)
         }
     }
 
@@ -1556,10 +1426,7 @@ private fun SceneEditor(
             title = "Delete scene?",
             summary = "This scene contains $wordCount words. Press and hold DELETE to move it to Trash.",
             onDismiss = { showSceneDelete = false },
-            onConfirm = {
-                showSceneDelete = false
-                onDelete()
-            }
+            onConfirm = { showSceneDelete = false; onDelete() }
         )
     }
 }
@@ -1578,23 +1445,24 @@ private fun EditorToolbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(70.dp)
-            .background(NovellumRaisedSoft)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .height(58.dp)
+            .shadow(10.dp, RoundedCornerShape(14.dp), ambientColor = Color.Black.copy(alpha = 0.42f), spotColor = Color.Black.copy(alpha = 0.8f))
+            .background(Brush.verticalGradient(listOf(Color(0xFF20262E), Color(0xFF151A21))), RoundedCornerShape(14.dp))
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ToolButton("B", fontWeight = FontWeight.Bold, onClick = onBold)
-        Spacer(Modifier.width(6.dp))
         ToolButton("I", fontStyle = FontStyle.Italic, onClick = onItalic)
+        ToolButton("❞", onClick = {})
         ToolbarDivider()
+        ToolButton("☷", onClick = {})
+        ToolButton("≣", onClick = {})
         Spacer(Modifier.weight(1f))
         ToolButton("↶", enabled = canUndo, onClick = onUndo)
-        Spacer(Modifier.width(6.dp))
         ToolButton("↷", enabled = canRedo, onClick = onRedo)
-        if (canSave) {
-            ToolbarDivider()
-            ToolButton("Save", accent = true, onClick = onSaveNow)
-        }
+        ToolbarDivider()
+        ToolButton("▥  Split Screen", onClick = {})
+        if (canSave) { Spacer(Modifier.width(6.dp)); ToolButton("Save", accent = true, onClick = onSaveNow) }
     }
 }
 
@@ -1607,35 +1475,18 @@ private fun ToolButton(
     accent: Boolean = false,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(8.dp)
     Box(
         modifier = Modifier
-            .shadow(
-                if (enabled) 3.dp else 0.dp,
-                shape,
-                ambientColor = Color.Black.copy(alpha = 0.32f),
-                spotColor = NovellumShadow
-            )
-            .background(
-                when {
-                    !enabled -> NovellumInset.copy(alpha = 0.70f)
-                    accent -> NovellumAccentSoft
-                    else -> NovellumRaised
-                },
-                shape
-            )
+            .padding(horizontal = 2.dp)
+            .background(if (accent) NovellumAccentSoft else Color.Transparent, RoundedCornerShape(9.dp))
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 7.dp),
+            .padding(horizontal = 11.dp, vertical = 7.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = label,
-            color = when {
-                !enabled -> NovellumTextDim.copy(alpha = 0.42f)
-                accent -> NovellumAccentGlow
-                else -> NovellumTextSoft
-            },
-            fontSize = 11.sp,
+            label,
+            color = when { !enabled -> NovellumTextDim.copy(alpha = 0.35f); accent -> NovellumAccentGlow; else -> NovellumTextSoft },
+            fontSize = 12.sp,
             fontWeight = fontWeight,
             fontStyle = fontStyle,
             fontFamily = FontFamily.SansSerif
@@ -1657,12 +1508,11 @@ private fun ToolbarDivider() {
 @Composable
 private fun WorkspaceRail(symbol: String, onClick: () -> Unit) {
     Box(
-        modifier = Modifier
-            .width(15.dp)
-            .fillMaxHeight()
-            .background(NovellumBlack)
-            .clickable(onClick = onClick)
-    )
+        modifier = Modifier.width(12.dp).fillMaxHeight().background(NovellumCanvas).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(symbol, color = NovellumTextDim.copy(alpha = 0.25f), fontSize = 9.sp)
+    }
 }
 
 @Composable
@@ -1679,9 +1529,9 @@ private fun AuxiliaryWorkspacePanel(
     Column(
         modifier = modifier
             .background(NovellumCanvas)
-            .padding(end = 26.dp, top = 10.dp, bottom = 40.dp)
+            .padding(end = 18.dp, top = 12.dp, bottom = 18.dp)
             .shadow(12.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.38f), spotColor = NovellumShadow)
-            .background(NovellumSidebar, RoundedCornerShape(18.dp))
+            .background(Brush.verticalGradient(listOf(Color(0xFF1A2028), Color(0xFF11161D))), RoundedCornerShape(18.dp))
             
             .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
@@ -1706,7 +1556,7 @@ private fun AuxiliaryWorkspacePanel(
                             spotColor = NovellumShadow
                         )
                         .background(
-                            if (active) NovellumAccent else Color.Transparent,
+                            if (active) Color(0xFFC94E24) else Color.Transparent,
                             RoundedCornerShape(14.dp)
                         )
 

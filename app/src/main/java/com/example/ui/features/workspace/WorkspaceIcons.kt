@@ -71,7 +71,7 @@ private fun DrawScope.drawWorkspaceIcon(icon: WorkspaceIcon, tint: Color) {
 
     when (icon) {
         WorkspaceIcon.Brand -> {
-            drawCircle(tint.copy(alpha = 0.28f), unit * 0.16f, at(.5f, .5f), Stroke(stroke * .55f))
+            drawCircle(tint.copy(alpha = 0.28f), unit * 0.16f, at(.5f, .5f), style = Stroke(stroke * .55f))
             drawLine(tint, at(.5f, .08f), at(.5f, .92f), stroke * .68f, StrokeCap.Round)
             drawLine(tint, at(.08f, .5f), at(.92f, .5f), stroke * .68f, StrokeCap.Round)
             drawLine(tint, at(.22f, .22f), at(.78f, .78f), stroke * .42f, StrokeCap.Round)

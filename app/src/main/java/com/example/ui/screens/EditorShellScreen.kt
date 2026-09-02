@@ -8,7 +8,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -87,27 +85,23 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// Fresh visual system: dark machined polymer, recessed graphite, and restrained ember light.
-private val NovellumBlack = Color(0xFF0A0E13)
-private val NovellumHeader = Color(0xFF10151C)
-private val NovellumSidebar = Color(0xFF121820)
-private val NovellumCanvas = Color(0xFF0E1319)
-private val NovellumEditor = Color(0xFF11171E)
-private val NovellumRaised = Color(0xFF1C232C)
-private val NovellumRaisedSoft = Color(0xFF171E26)
-private val NovellumInset = Color(0xFF0B1016)
-private val NovellumLine = Color(0xFF242C36)
-private val NovellumLineSoft = Color(0xFF1B232C)
-private val NovellumHighlight = Color(0xFF303945)
-private val NovellumShadow = Color(0xFF05070A)
-private val NovellumText = Color(0xFFEAE8E4)
-private val NovellumTextSoft = Color(0xFFBBBCC0)
-private val NovellumTextDim = Color(0xFF7B828C)
-private val NovellumAccent = Color(0xFFEF6B45)
-private val NovellumAccentGlow = Color(0xFFFF875D)
-private val NovellumAccentSoft = Color(0xFF2D1B18)
+// Target visual system: blue-black glass, quiet graphite depth, and a single ember accent.
+private val NovellumBlack = Color(0xFF060A0E)
+private val NovellumHeader = Color(0xFF080D12)
+private val NovellumSidebar = Color(0xFF0D1319)
+private val NovellumEditor = Color(0xFF0B1117)
+private val NovellumRaisedSoft = Color(0xFF121920)
+private val NovellumInset = Color(0xFF090E13)
+private val NovellumLine = Color(0xFF26303A)
+private val NovellumLineSoft = Color(0xFF1B242D)
+private val NovellumHighlight = Color(0xFF35414C)
+private val NovellumText = Color(0xFFE6E2DC)
+private val NovellumTextSoft = Color(0xFFBDBCB9)
+private val NovellumTextDim = Color(0xFF777F88)
+private val NovellumAccent = Color(0xFFEA752F)
+private val NovellumAccentGlow = Color(0xFFF28A45)
+private val NovellumAccentSoft = Color(0xFF281710)
 private val NovellumDanger = Color(0xFFD96E75)
-private val NovellumSaved = Color(0xFF49B982)
 private val SidebarIconMuted = Color(0xFF7D858F)
 
 @Composable
@@ -220,12 +214,17 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(NovellumCanvas)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF090E13), NovellumBlack)
+                        )
+                    )
+                    .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
             ) {
                 if (manuscriptPanelOpen) {
                     ManuscriptSidebar(
                         modifier = Modifier
-                            .width(322.dp)
+                            .width(264.dp)
                             .fillMaxHeight(),
                         projectTitle = selectedProject?.title,
                         projectDisplayTitle = selectedProjectDisplayTitle,
@@ -282,7 +281,6 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .background(NovellumCanvas)
                 ) {
                     val scene = currentScene
                     if (scene == null) {
@@ -326,7 +324,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                     Spacer(Modifier.width(12.dp))
                     AuxiliaryWorkspacePanel(
                         modifier = Modifier
-                            .width(352.dp)
+                            .width(292.dp)
                             .fillMaxHeight(),
                         projectTitle = selectedProjectDisplayTitle,
                         chapterTitle = selectedChapter?.let {
@@ -366,63 +364,97 @@ private fun NovellumTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(76.dp)
+            .height(64.dp)
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFF121820), Color(0xFF0B0F14))
+                    listOf(Color(0xFF0B1117), NovellumHeader)
                 )
             )
-            .padding(horizontal = 24.dp, vertical = 8.dp),
+            .padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            modifier = Modifier.width(292.dp),
+            modifier = Modifier.width(252.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .background(Brush.verticalGradient(listOf(Color(0xFFF27A55), Color(0xFFD95A35))), RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("N", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Medium, fontFamily = FontFamily.Serif)
-            }
-            Spacer(Modifier.width(13.dp))
+            NovellumMark(Modifier.size(31.dp))
+            Spacer(Modifier.width(12.dp))
             Text(
-                "Novellum",
+                "NOVELLUM",
                 color = NovellumText,
-                fontSize = 21.sp,
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = FontFamily.Serif
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily.Serif,
+                letterSpacing = 3.2.sp
             )
         }
 
         Row(
             modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TopNavItem("Editor", !chapterPreviewActive)
-            TopNavItem("Cards", false)
-            TopNavItem("Vault", false)
-            TopNavItem("Library", false)
-            TopNavItem("Manuscript", chapterPreviewActive)
+            TopNavItem("✎", "Editor", !chapterPreviewActive)
+            TopNavItem("▱", "Cards", false)
+            TopNavItem("▣", "Vault", false)
+            TopNavItem("▥", "Library", false)
+            TopNavItem("▤", "Manuscript", chapterPreviewActive)
         }
 
         Row(
-            modifier = Modifier.width(224.dp),
+            modifier = Modifier.width(188.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
             WorkspaceToggleChip("◷", active = false, onClick = {})
-            Spacer(Modifier.width(9.dp))
+            Spacer(Modifier.width(6.dp))
             WorkspaceToggleChip("⚙", active = false, onClick = {})
-            Spacer(Modifier.width(9.dp))
+            Spacer(Modifier.width(6.dp))
+            HeaderDivider()
+            Spacer(Modifier.width(6.dp))
             WorkspaceToggleChip("▥", active = workspacePanelOpen, onClick = onToggleWorkspace)
-            Spacer(Modifier.width(9.dp))
+            Spacer(Modifier.width(6.dp))
             WorkspaceToggleChip("☷", active = manuscriptPanelOpen, onClick = onToggleManuscript)
         }
     }
+}
+
+@Composable
+private fun NovellumMark(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)
+        val inner = size.minDimension * 0.18f
+        val outer = size.minDimension * 0.48f
+        for (index in 0 until 8) {
+            val angle = Math.toRadians((index * 45.0) - 90.0)
+            val start = androidx.compose.ui.geometry.Offset(
+                center.x + kotlin.math.cos(angle).toFloat() * inner,
+                center.y + kotlin.math.sin(angle).toFloat() * inner
+            )
+            val end = androidx.compose.ui.geometry.Offset(
+                center.x + kotlin.math.cos(angle).toFloat() * outer,
+                center.y + kotlin.math.sin(angle).toFloat() * outer
+            )
+            drawLine(
+                color = NovellumAccent,
+                start = start,
+                end = end,
+                strokeWidth = if (index % 2 == 0) 1.35.dp.toPx() else 0.85.dp.toPx(),
+                cap = StrokeCap.Round
+            )
+        }
+        drawCircle(NovellumAccentGlow, radius = 2.1.dp.toPx(), center = center)
+    }
+}
+
+@Composable
+private fun HeaderDivider() {
+    Box(
+        Modifier
+            .width(1.dp)
+            .height(22.dp)
+            .background(NovellumLineSoft)
+    )
 }
 
 @Composable
@@ -431,41 +463,51 @@ private fun WorkspaceToggleChip(
     active: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(50)
     Box(
         modifier = Modifier
-            .size(38.dp)
-            .background(if (active) NovellumRaisedSoft else Color.Transparent, shape)
+            .size(34.dp)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
             label,
-            color = if (active) NovellumAccentGlow else NovellumTextSoft,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
+            color = if (active) NovellumText else NovellumTextSoft,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.Normal,
             fontFamily = FontFamily.SansSerif
         )
     }
 }
 
 @Composable
-private fun TopNavItem(label: String, active: Boolean) {
-    val shape = RoundedCornerShape(12.dp)
-    Box(
+private fun TopNavItem(symbol: String, label: String, active: Boolean) {
+    Column(
         modifier = Modifier
-            .padding(horizontal = 3.dp)
-            .background(if (active) NovellumAccentSoft.copy(alpha = 0.72f) else Color.Transparent, shape)
-            .then(if (active) Modifier.border(1.dp, NovellumAccent.copy(alpha = 0.22f), shape) else Modifier)
-            .padding(horizontal = 18.dp, vertical = 9.dp),
-        contentAlignment = Alignment.Center
+            .height(64.dp)
+            .width(96.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom
     ) {
-        Text(
-            label,
-            color = if (active) NovellumAccentGlow else NovellumTextSoft,
-            fontSize = 13.sp,
-            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
-            fontFamily = FontFamily.SansSerif
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(symbol, color = if (active) NovellumAccent else NovellumTextDim, fontSize = 16.sp)
+            Spacer(Modifier.width(8.dp))
+            Text(
+                label,
+                color = if (active) NovellumAccentGlow else NovellumTextSoft,
+                fontSize = 12.sp,
+                fontWeight = if (active) FontWeight.Medium else FontWeight.Normal,
+                fontFamily = FontFamily.SansSerif
+            )
+        }
+        Box(
+            Modifier
+                .width(if (active) 80.dp else 0.dp)
+                .height(2.dp)
+                .background(NovellumAccent, RoundedCornerShape(50))
         )
     }
 }
@@ -520,37 +562,44 @@ private fun ManuscriptSidebar(
     onBackupJson: () -> Unit,
     onExportMarkdown: () -> Unit
 ) {
-    val panelShape = RoundedCornerShape(14.dp)
+    val panelShape = RoundedCornerShape(13.dp)
     Column(
         modifier = modifier
-            .background(NovellumCanvas)
-            .padding(start = 18.dp, top = 14.dp, bottom = 18.dp)
-            .background(Brush.verticalGradient(listOf(Color(0xFF141B23), Color(0xFF11171E))), panelShape)
-            .border(1.dp, NovellumLineSoft.copy(alpha = 0.72f), panelShape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF10171D), Color(0xFF0B1117))
+                ),
+                panelShape
+            )
+            .border(1.dp, NovellumLineSoft.copy(alpha = 0.86f), panelShape)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .padding(start = 16.dp, end = 12.dp),
+                .height(55.dp)
+                .padding(start = 18.dp, end = 13.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "MANUSCRIPT",
-                color = NovellumTextDim,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.05.sp,
+                color = NovellumTextSoft,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.8.sp,
                 fontFamily = FontFamily.SansSerif,
                 modifier = Modifier.weight(1f)
             )
 
             if (selectedProjectId == null) {
-                TreeControl("+", description = "New project", compact = true, onClick = onCreateProject)
+                BareHeaderControl("+", onClick = onCreateProject)
             } else {
-                MiniAction("‹ Projects", accent = NovellumAccent.copy(alpha = 0.90f), onClick = onBackToProjects)
+                BareHeaderControl("‹", onClick = onBackToProjects)
             }
+            Spacer(Modifier.width(4.dp))
+            MoreDotsGlyph(color = NovellumTextSoft, modifier = Modifier.size(26.dp))
         }
+
+        DividerLine()
 
         if (selectedProjectId == null) {
             ProjectList(
@@ -586,6 +635,23 @@ private fun ManuscriptSidebar(
 }
 
 @Composable
+private fun BareHeaderControl(symbol: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = symbol,
+            color = NovellumTextSoft,
+            fontSize = 20.sp,
+            fontFamily = FontFamily.SansSerif
+        )
+    }
+}
+
+@Composable
 private fun ProjectList(
     projects: List<Pair<String, String>>,
     onCreateProject: () -> Unit,
@@ -595,20 +661,21 @@ private fun ProjectList(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(12.dp)
+            .padding(horizontal = 13.dp, vertical = 14.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Projects",
+                "PROJECTS",
                 color = NovellumText,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.9.sp,
                 modifier = Modifier.weight(1f)
             )
-            TreeControl("+", description = "New project", onClick = onCreateProject)
+            TreeControl("+", description = "New project", compact = true, onClick = onCreateProject)
         }
 
         Spacer(Modifier.height(10.dp))
@@ -618,8 +685,8 @@ private fun ProjectList(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(NovellumRaisedSoft, RoundedCornerShape(10.dp))
-                        .padding(horizontal = 11.dp, vertical = 9.dp),
+                        .background(NovellumRaisedSoft.copy(alpha = 0.68f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 11.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("▱", color = NovellumAccent, fontSize = 14.sp)
@@ -641,12 +708,7 @@ private fun ProjectList(
         }
 
         Spacer(Modifier.weight(1f))
-        Text(
-            "Tap to open • hold a title to manage",
-            color = NovellumTextDim,
-            fontSize = 9.sp,
-            modifier = Modifier.padding(horizontal = 3.dp, vertical = 7.dp)
-        )
+        Text("Tap to open · hold to manage", color = NovellumTextDim, fontSize = 9.sp)
     }
 }
 
@@ -682,35 +744,38 @@ private fun ProjectManuscript(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .padding(start = 15.dp, end = 12.dp),
+                .padding(start = 18.dp, top = 14.dp, end = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "PROJECT",
+                    color = NovellumTextDim,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.7.sp
+                )
+                Spacer(Modifier.height(3.dp))
+                ManageableTitle(
+                    id = projectId,
+                    rawTitle = projectTitle,
+                    displayTitle = projectDisplayTitle,
+                    emptyDraftWhenDefault = isDefaultProjectTitle(projectTitle),
+                    color = NovellumAccentGlow,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily.SansSerif,
+                    onRename = { onRenameProject(projectId, it) },
+                    onDeleteRequest = {
+                        if (projectIsEmpty) onDeleteProject() else showProjectDelete = true
+                    }
+                )
+            }
             DisclosureChevron(
                 expanded = projectExpanded,
                 visible = chapters.isNotEmpty(),
                 onClick = { projectExpanded = !projectExpanded }
             )
-            Spacer(Modifier.width(3.dp))
-
-            ManageableTitle(
-                id = projectId,
-                rawTitle = projectTitle,
-                displayTitle = projectDisplayTitle,
-                emptyDraftWhenDefault = isDefaultProjectTitle(projectTitle),
-                modifier = Modifier.weight(1f),
-                color = NovellumText,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = FontFamily.SansSerif,
-                onRename = { onRenameProject(projectId, it) },
-                onDeleteRequest = {
-                    if (projectIsEmpty) onDeleteProject() else showProjectDelete = true
-                }
-            )
-
-            MoreDotsGlyph(color = NovellumTextDim, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(6.dp))
             TreeControl(
                 symbol = "+",
                 description = "New chapter",
@@ -722,17 +787,10 @@ private fun ProjectManuscript(
             )
         }
 
-        if (projectExpanded) {
-            Text(
-                text = "CHAPTERS",
-                color = NovellumTextDim,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.0.sp,
-                fontFamily = FontFamily.SansSerif,
-                modifier = Modifier.padding(start = 48.dp, top = 3.dp, bottom = 7.dp)
-            )
+        SidebarSearchBox()
+        Spacer(Modifier.height(8.dp))
 
+        if (projectExpanded) {
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -761,52 +819,32 @@ private fun ProjectManuscript(
             Spacer(Modifier.weight(1f))
         }
 
+        DividerLine()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp)
-                .height(48.dp),
+                .height(64.dp)
+                .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            FooterIconButton(symbol = "⇅", description = "Sort")
-            Spacer(Modifier.width(10.dp))
-            Column {
-                Text("Word count", color = NovellumTextDim, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
-                Text(
-                    String.format(Locale.US, "%,d", projectWordCount),
-                    color = NovellumTextSoft,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = FontFamily.SansSerif
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            FooterIconButton(symbol = "⌕", description = "Search")
-            Spacer(Modifier.width(7.dp))
-            FooterIconButton(symbol = "≡", description = "Filter")
+            SidebarMetric("WORDS", String.format(Locale.US, "%,d", projectWordCount), Modifier.weight(1f))
+            SidebarMetric("SCENES", scenes.size.toString(), Modifier.weight(1f))
+            SidebarMetric("CHAPTERS", chapters.size.toString(), Modifier.weight(1f))
         }
-
+        DividerLine()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 15.dp, end = 15.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .height(64.dp)
+                .padding(horizontal = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Text(
-                "Backup JSON",
-                color = NovellumTextDim,
-                fontSize = 9.sp,
-                modifier = Modifier.clickable(onClick = onBackupJson).padding(vertical = 6.dp)
-            )
-            Text("  ·  ", color = NovellumLineSoft, fontSize = 9.sp)
-            Text(
-                "Export MD",
-                color = NovellumTextDim,
-                fontSize = 9.sp,
-                modifier = Modifier.clickable(onClick = onExportMarkdown).padding(vertical = 6.dp)
-            )
-            Spacer(Modifier.weight(1f))
-            Text("hold title = manage", color = NovellumTextDim.copy(alpha = 0.65f), fontSize = 8.sp)
+            SidebarFooterAction("⌕", "Search", onClick = {})
+            SidebarFooterAction("▽", "Filter", onClick = {})
+            SidebarFooterAction("▥", "Stats", onClick = {})
+            SidebarFooterAction("⇧", "Backup", onClick = onBackupJson)
+            SidebarFooterAction("⇩", "Export", onClick = onExportMarkdown)
         }
     }
 
@@ -824,6 +862,49 @@ private fun ProjectManuscript(
             onDismiss = { showProjectDelete = false },
             onConfirm = { showProjectDelete = false; onDeleteProject() }
         )
+    }
+}
+
+@Composable
+private fun SidebarSearchBox() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(40.dp)
+            .background(NovellumInset.copy(alpha = 0.86f), RoundedCornerShape(8.dp))
+            .border(1.dp, NovellumLineSoft, RoundedCornerShape(8.dp))
+            .padding(horizontal = 11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("⌕", color = NovellumTextSoft, fontSize = 18.sp)
+        Spacer(Modifier.width(9.dp))
+        Text("Search manuscript", color = NovellumTextDim, fontSize = 10.sp, modifier = Modifier.weight(1f))
+        Text("≛", color = NovellumTextDim, fontSize = 15.sp)
+    }
+}
+
+@Composable
+private fun SidebarMetric(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.Start) {
+        Text(label, color = NovellumTextDim, fontSize = 8.sp, letterSpacing = 0.45.sp)
+        Spacer(Modifier.height(3.dp))
+        Text(value, color = NovellumAccentGlow, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun SidebarFooterAction(symbol: String, label: String, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .width(46.dp)
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(symbol, color = NovellumTextSoft, fontSize = 18.sp)
+        Spacer(Modifier.height(2.dp))
+        Text(label, color = NovellumTextDim, fontSize = 8.sp)
     }
 }
 
@@ -850,25 +931,25 @@ private fun ChapterBlock(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 3.dp)
+            .padding(bottom = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(39.dp)
+                .height(38.dp)
                 .background(
-                    if (selectedAsPreview) NovellumRaisedSoft else Color.Transparent,
-                    RoundedCornerShape(8.dp)
+                    if (selectedAsPreview) NovellumRaisedSoft.copy(alpha = 0.76f) else Color.Transparent,
+                    RoundedCornerShape(7.dp)
                 )
-                .padding(start = 1.dp, end = 2.dp),
+                .padding(end = 1.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             DisclosureChevron(expanded = expanded, visible = scenes.isNotEmpty(), onClick = { expanded = !expanded })
             FolderGlyph(
-                color = if (selectedAsPreview) NovellumAccent else NovellumAccent.copy(alpha = 0.78f),
-                modifier = Modifier.size(18.dp)
+                color = if (selectedAsPreview) NovellumAccentGlow else NovellumTextSoft,
+                modifier = Modifier.size(17.dp)
             )
-            Spacer(Modifier.width(9.dp))
+            Spacer(Modifier.width(8.dp))
 
             ManageableTitle(
                 id = chapter.id,
@@ -876,8 +957,8 @@ private fun ChapterBlock(
                 displayTitle = chapterDisplayTitle(chapter.title, chapterIndex),
                 emptyDraftWhenDefault = isDefaultChapterTitle(chapter.title),
                 modifier = Modifier.weight(1f),
-                color = if (selectedAsPreview) NovellumText else NovellumTextSoft,
-                fontSize = 13.sp,
+                color = if (selectedAsPreview) NovellumText else NovellumTextSoft.copy(alpha = 0.92f),
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = FontFamily.SansSerif,
                 onTap = onSelectChapter,
@@ -887,15 +968,6 @@ private fun ChapterBlock(
                 }
             )
 
-            Box(
-                Modifier
-                    .size(6.dp)
-                    .background(
-                        if (selectedAsPreview) NovellumAccent else NovellumTextDim.copy(alpha = 0.4f),
-                        RoundedCornerShape(50)
-                    )
-            )
-            Spacer(Modifier.width(9.dp))
             MoreDotsGlyph(color = NovellumTextDim.copy(alpha = 0.82f), modifier = Modifier.size(18.dp))
             TreeControl(
                 symbol = "+",
@@ -912,10 +984,26 @@ private fun ChapterBlock(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 32.dp, top = 1.dp, bottom = 1.dp)
-                        .height(38.dp)
-                        .background(if (selected) NovellumRaisedSoft else Color.Transparent, rowShape)
-                        .padding(horizontal = 10.dp),
+                        .padding(start = 31.dp, top = 1.dp, bottom = 1.dp)
+                        .height(37.dp)
+                        .background(
+                            brush = if (selected) {
+                                Brush.horizontalGradient(
+                                    listOf(NovellumAccentSoft.copy(alpha = 0.78f), NovellumRaisedSoft)
+                                )
+                            } else {
+                                SolidColor(Color.Transparent)
+                            },
+                            shape = rowShape
+                        )
+                        .then(
+                            if (selected) Modifier.border(
+                                1.dp,
+                                NovellumAccent.copy(alpha = 0.20f),
+                                rowShape
+                            ) else Modifier
+                        )
+                        .padding(horizontal = 9.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     DocumentGlyph(
@@ -929,8 +1017,8 @@ private fun ChapterBlock(
                         displayTitle = sceneDisplayTitle(scene.title, sceneIndex),
                         emptyDraftWhenDefault = isDefaultSceneTitle(scene.title),
                         modifier = Modifier.weight(1f),
-                        color = if (selected) NovellumText else NovellumTextDim,
-                        fontSize = 13.sp,
+                        color = if (selected) NovellumAccentGlow else NovellumTextSoft.copy(alpha = 0.78f),
+                        fontSize = 12.sp,
                         fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
                         fontFamily = FontFamily.SansSerif,
                         onTap = { onSelectScene(scene.id) },
@@ -941,9 +1029,9 @@ private fun ChapterBlock(
                     )
                     Box(
                         Modifier
-                            .size(6.dp)
+                            .size(if (selected) 7.dp else 4.dp)
                             .background(
-                                if (selected) NovellumAccent else NovellumTextDim.copy(alpha = 0.4f),
+                                if (selected) NovellumAccent else NovellumTextDim.copy(alpha = 0.28f),
                                 RoundedCornerShape(50)
                             )
                     )
@@ -986,7 +1074,7 @@ private fun DisclosureChevron(
 ) {
     Box(
         modifier = Modifier
-            .size(25.dp)
+            .size(27.dp)
             .clickable(enabled = visible, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -994,7 +1082,7 @@ private fun DisclosureChevron(
             Text(
                 text = if (expanded) "⌄" else "›",
                 color = NovellumTextSoft,
-                fontSize = 15.sp,
+                fontSize = 17.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = FontFamily.SansSerif
             )
@@ -1079,18 +1167,6 @@ private fun MoreDotsGlyph(color: Color, modifier: Modifier = Modifier) {
         drawCircle(color, r, androidx.compose.ui.geometry.Offset(cx, size.height * 0.32f))
         drawCircle(color, r, androidx.compose.ui.geometry.Offset(cx, size.height * 0.50f))
         drawCircle(color, r, androidx.compose.ui.geometry.Offset(cx, size.height * 0.68f))
-    }
-}
-
-@Composable
-private fun FooterIconButton(symbol: String, description: String) {
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .background(NovellumRaisedSoft, RoundedCornerShape(10.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(symbol, color = NovellumTextSoft, fontSize = 16.sp, fontFamily = FontFamily.SansSerif)
     }
 }
 
@@ -1267,18 +1343,24 @@ private fun SceneEditor(
     }
     val wordCount = remember(editorValue.text) { if (editorValue.text.isBlank()) 0 else editorValue.text.trim().split(Regex("\\s+")).size }
     val sceneHasMeaningfulContent = editorValue.text.isNotBlank() || scene.prose.isNotBlank()
-    val shellShape = RoundedCornerShape(14.dp)
+    val shellShape = RoundedCornerShape(13.dp)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(NovellumCanvas)
-            .padding(start = 4.dp, top = 12.dp, end = 6.dp, bottom = 14.dp)
-            .background(NovellumEditor, shellShape)
-            .border(1.dp, NovellumLineSoft, shellShape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF0D141A), NovellumEditor)
+                ),
+                shellShape
+            )
+            .border(1.dp, NovellumLineSoft.copy(alpha = 0.90f), shellShape)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(70.dp).padding(horizontal = 26.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .padding(horizontal = 28.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -1288,27 +1370,48 @@ private fun SceneEditor(
                     displayTitle = sceneDisplayTitle,
                     emptyDraftWhenDefault = isDefaultSceneTitle(scene.title),
                     color = NovellumText,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = FontFamily.Serif,
                     onRename = onRenameScene,
                     onDeleteRequest = { if (sceneHasMeaningfulContent) showSceneDelete = true else onDelete() }
                 )
-                if (chapterTitle != null) Text(chapterTitle, color = NovellumTextDim, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
+                if (chapterTitle != null) {
+                    Text(chapterTitle, color = NovellumTextDim, fontSize = 8.sp, fontFamily = FontFamily.SansSerif)
+                }
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(7.dp).background(if (saveState == SaveState.SAVED) NovellumSaved else NovellumAccent, RoundedCornerShape(50)))
-                Spacer(Modifier.width(7.dp))
-                Text(saveLabel, color = if (saveState == SaveState.SAVED) NovellumTextDim else NovellumAccentGlow, fontSize = 10.sp)
-                Spacer(Modifier.width(22.dp))
-                Box(
-                    Modifier
-                        .background(NovellumRaisedSoft, RoundedCornerShape(10.dp))
-                        .padding(horizontal = 17.dp, vertical = 10.dp)
-                ) { Text("Clean Text ⌄", color = NovellumAccentGlow, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
-            }
+            Spacer(Modifier.width(14.dp))
+            HeaderDivider()
+            Spacer(Modifier.width(14.dp))
+            Box(
+                Modifier
+                    .size(7.dp)
+                    .background(
+                        if (saveState == SaveState.SAVED) NovellumAccent else NovellumDanger,
+                        RoundedCornerShape(50)
+                    )
+            )
+            Spacer(Modifier.width(7.dp))
+            Text(
+                saveLabel,
+                color = if (saveState == SaveState.SAVED) NovellumTextSoft else NovellumAccentGlow,
+                fontSize = 9.sp
+            )
+            Spacer(Modifier.width(12.dp))
+            HeaderAction("↶", enabled = undoStack.isNotEmpty(), onClick = ::undo)
+            HeaderAction("↷", enabled = redoStack.isNotEmpty(), onClick = ::redo)
+            Spacer(Modifier.width(6.dp))
+            HeaderDivider()
+            Spacer(Modifier.width(8.dp))
+            HeaderAction("▥  Split", onClick = {})
+            HeaderAction("✦  Clean Text", accent = true, onClick = {})
         }
 
-        Box(Modifier.padding(horizontal = 18.dp)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 34.dp, end = 34.dp)
+        ) {
             EditorToolbar(
                 canUndo = undoStack.isNotEmpty(), canRedo = redoStack.isNotEmpty(), canSave = saveState == SaveState.UNSAVED,
                 onUndo = ::undo, onRedo = ::redo, onBold = { wrapSelection("**") }, onItalic = { wrapSelection("_") }, onSaveNow = onSaveNow
@@ -1316,17 +1419,30 @@ private fun SceneEditor(
         }
 
         Box(
-            modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 30.dp, vertical = 18.dp),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 30.dp, vertical = 12.dp),
             contentAlignment = Alignment.TopCenter
         ) {
             Box(
-                modifier = Modifier.fillMaxHeight().widthIn(max = 900.dp).fillMaxWidth().padding(horizontal = 28.dp, vertical = 22.dp)
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .widthIn(max = 820.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 18.dp)
             ) {
                 BasicTextField(
                     value = editorValue,
                     onValueChange = { applyValue(it) },
                     modifier = Modifier.fillMaxSize(),
-                    textStyle = TextStyle(color = Color(0xFFD8D4CC), fontSize = 18.sp, lineHeight = 31.sp, fontFamily = FontFamily.Serif),
+                    textStyle = TextStyle(
+                        color = Color(0xFFD9D6D0),
+                        fontSize = 18.sp,
+                        lineHeight = 30.sp,
+                        fontFamily = FontFamily.Serif,
+                        letterSpacing = 0.12.sp
+                    ),
                     cursorBrush = SolidColor(NovellumAccent),
                     decorationBox = { inner ->
                         Box(Modifier.fillMaxSize()) {
@@ -1338,10 +1454,25 @@ private fun SceneEditor(
             }
         }
 
-        Row(Modifier.fillMaxWidth().height(34.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("$wordCount words", color = NovellumTextDim, fontSize = 9.sp)
-            Spacer(Modifier.weight(1f))
-            if (saveState == SaveState.BLOCKED_EMPTY_CLEAR) MiniAction("Confirm clear", accent = NovellumDanger, onClick = onConfirmClear)
+        DividerLine()
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(34.dp)
+                .padding(horizontal = 26.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Words: $wordCount", color = NovellumTextDim, fontSize = 9.sp)
+            Spacer(Modifier.width(18.dp))
+            Text("Chars: ${editorValue.text.length}", color = NovellumTextDim, fontSize = 9.sp)
+            Spacer(Modifier.width(24.dp))
+            EditorProgress(Modifier.weight(1f))
+            Spacer(Modifier.width(22.dp))
+            if (saveState == SaveState.BLOCKED_EMPTY_CLEAR) {
+                MiniAction("Confirm clear", accent = NovellumDanger, onClick = onConfirmClear)
+                Spacer(Modifier.width(14.dp))
+            }
+            Text("Page 1 of 1", color = NovellumTextDim, fontSize = 9.sp)
         }
     }
 
@@ -1351,6 +1482,58 @@ private fun SceneEditor(
             summary = "This scene contains $wordCount words. Press and hold DELETE to move it to Trash.",
             onDismiss = { showSceneDelete = false },
             onConfirm = { showSceneDelete = false; onDelete() }
+        )
+    }
+}
+
+@Composable
+private fun HeaderAction(
+    label: String,
+    enabled: Boolean = true,
+    accent: Boolean = false,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            label,
+            color = when {
+                !enabled -> NovellumTextDim.copy(alpha = 0.35f)
+                accent -> NovellumTextSoft
+                else -> NovellumTextSoft
+            },
+            fontSize = 11.sp,
+            fontFamily = FontFamily.SansSerif
+        )
+    }
+}
+
+@Composable
+private fun EditorProgress(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.height(12.dp)) {
+        val y = size.height / 2f
+        drawLine(
+            color = NovellumLine,
+            start = androidx.compose.ui.geometry.Offset(0f, y),
+            end = androidx.compose.ui.geometry.Offset(size.width, y),
+            strokeWidth = 1.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = NovellumAccent.copy(alpha = 0.55f),
+            start = androidx.compose.ui.geometry.Offset(0f, y),
+            end = androidx.compose.ui.geometry.Offset(size.width * 0.58f, y),
+            strokeWidth = 1.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+        drawCircle(
+            color = NovellumAccent,
+            radius = 3.4.dp.toPx(),
+            center = androidx.compose.ui.geometry.Offset(size.width * 0.58f, y)
         )
     }
 }
@@ -1369,10 +1552,13 @@ private fun EditorToolbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(54.dp)
-            .background(NovellumRaisedSoft, RoundedCornerShape(10.dp))
-            .border(1.dp, NovellumLineSoft, RoundedCornerShape(10.dp))
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .height(48.dp)
+            .background(
+                Brush.verticalGradient(listOf(Color(0xFF141B21), Color(0xFF10161C))),
+                RoundedCornerShape(8.dp)
+            )
+            .border(1.dp, NovellumLineSoft.copy(alpha = 0.82f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ToolButton("B", fontWeight = FontWeight.Bold, onClick = onBold)
@@ -1385,7 +1571,7 @@ private fun EditorToolbar(
         ToolButton("↶", enabled = canUndo, onClick = onUndo)
         ToolButton("↷", enabled = canRedo, onClick = onRedo)
         ToolbarDivider()
-        ToolButton("▥  Split Screen", onClick = {})
+        ToolButton("▥  Split", onClick = {})
         if (canSave) { Spacer(Modifier.width(6.dp)); ToolButton("Save", accent = true, onClick = onSaveNow) }
     }
 }
@@ -1401,16 +1587,16 @@ private fun ToolButton(
 ) {
     Box(
         modifier = Modifier
-            .padding(horizontal = 2.dp)
-            .background(if (accent) NovellumAccentSoft else Color.Transparent, RoundedCornerShape(9.dp))
+            .padding(horizontal = 1.dp)
+            .background(if (accent) NovellumAccentSoft else Color.Transparent, RoundedCornerShape(7.dp))
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 11.dp, vertical = 7.dp),
+            .padding(horizontal = 9.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             label,
             color = when { !enabled -> NovellumTextDim.copy(alpha = 0.35f); accent -> NovellumAccentGlow; else -> NovellumTextSoft },
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = fontWeight,
             fontStyle = fontStyle,
             fontFamily = FontFamily.SansSerif
@@ -1430,16 +1616,6 @@ private fun ToolbarDivider() {
 }
 
 @Composable
-private fun WorkspaceRail(symbol: String, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier.width(12.dp).fillMaxHeight().background(NovellumCanvas).clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(symbol, color = NovellumTextDim.copy(alpha = 0.25f), fontSize = 9.sp)
-    }
-}
-
-@Composable
 private fun AuxiliaryWorkspacePanel(
     modifier: Modifier,
     projectTitle: String?,
@@ -1452,185 +1628,239 @@ private fun AuxiliaryWorkspacePanel(
     var tab by rememberSaveable { mutableStateOf("Vault") }
     Column(
         modifier = modifier
-            .background(NovellumCanvas)
-            .padding(end = 18.dp, top = 12.dp, bottom = 18.dp)
-            .background(Brush.verticalGradient(listOf(Color(0xFF141B23), Color(0xFF11171E))), RoundedCornerShape(14.dp))
-            .border(1.dp, NovellumLineSoft.copy(alpha = 0.72f), RoundedCornerShape(14.dp))
-            .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
+                .weight(1.58f)
                 .fillMaxWidth()
-                .background(NovellumInset, RoundedCornerShape(12.dp))
-                .padding(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            listOf("Vault", "Library", "Notes").forEach { label ->
-                val active = tab == label
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(
-                            if (active) NovellumAccent.copy(alpha = 0.82f) else Color.Transparent,
-                            RoundedCornerShape(10.dp)
-                        )
-                        .clickable { tab = label }
-                        .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = label,
-                        color = if (active) Color.White else NovellumTextSoft,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        fontFamily = FontFamily.SansSerif
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        when (tab) {
-            "Notes" -> {
-                Text(
-                    text = "SCENE NOTES",
-                    color = NovellumAccent,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    fontFamily = FontFamily.SansSerif
+                .background(
+                    Brush.verticalGradient(listOf(Color(0xFF10171D), Color(0xFF0B1117))),
+                    RoundedCornerShape(13.dp)
                 )
-                Spacer(Modifier.height(12.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .background(NovellumRaisedSoft, RoundedCornerShape(12.dp))
-                        .border(1.dp, NovellumLineSoft, RoundedCornerShape(12.dp))
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Jot down ideas, reminders, or scratchpad notes for this scene…",
-                        color = NovellumTextDim,
-                        fontSize = 12.sp,
-                        lineHeight = 18.sp,
-                        fontFamily = FontFamily.Serif
-                    )
-                }
-            }
-
-            else -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(42.dp)
-                        .background(NovellumInset, RoundedCornerShape(10.dp))
-                        .border(1.dp, NovellumLineSoft, RoundedCornerShape(10.dp))
-                        .padding(horizontal = 14.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(
-                        text = if (tab == "Vault") "Search snippets…" else "Search staging…",
-                        color = NovellumTextDim,
-                        fontSize = 11.sp,
-                        fontFamily = FontFamily.SansSerif
-                    )
-                }
-
-                Spacer(Modifier.weight(1f))
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Box(
+                .border(1.dp, NovellumLineSoft.copy(alpha = 0.86f), RoundedCornerShape(13.dp))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp)
+                    .padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                listOf("Vault", "Library", "Notes").forEach { label ->
+                    val active = tab == label
+                    Column(
                         modifier = Modifier
-                            .size(72.dp)
-                            .background(NovellumRaisedSoft, RoundedCornerShape(16.dp))
-                            .border(1.dp, NovellumLineSoft, RoundedCornerShape(16.dp)),
-                        contentAlignment = Alignment.Center
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable { tab = label },
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = if (tab == "Vault") "▣" else "▱",
-                            color = NovellumAccent,
-                            fontSize = 28.sp
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = label,
+                                color = if (active) NovellumAccentGlow else NovellumTextSoft,
+                                fontSize = 11.sp,
+                                fontWeight = if (active) FontWeight.Medium else FontWeight.Normal,
+                                fontFamily = FontFamily.SansSerif
+                            )
+                        }
+                        Box(
+                            Modifier
+                                .width(if (active) 66.dp else 0.dp)
+                                .height(2.dp)
+                                .background(NovellumAccent, RoundedCornerShape(50))
                         )
                     }
-                    Spacer(Modifier.height(14.dp))
+                }
+            }
+            DividerLine()
+
+            if (tab == "Notes") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    Text("SCENE NOTES", color = NovellumAccentGlow, fontSize = 10.sp, letterSpacing = 0.9.sp)
+                    Spacer(Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(NovellumInset, RoundedCornerShape(9.dp))
+                            .border(1.dp, NovellumLineSoft, RoundedCornerShape(9.dp))
+                            .padding(14.dp)
+                    ) {
+                        Text(
+                            "Jot down ideas, reminders, or scratchpad notes for this scene…",
+                            color = NovellumTextDim,
+                            fontSize = 11.sp,
+                            lineHeight = 18.sp,
+                            fontFamily = FontFamily.Serif
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(38.dp)
+                                .background(NovellumInset, RoundedCornerShape(8.dp))
+                                .border(1.dp, NovellumLineSoft, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 11.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("⌕", color = NovellumTextSoft, fontSize = 17.sp)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                if (tab == "Vault") "Search vault…" else "Search library…",
+                                color = NovellumTextDim,
+                                fontSize = 10.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text("≛", color = NovellumTextDim, fontSize = 15.sp)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Box(
+                            Modifier
+                                .size(38.dp)
+                                .background(NovellumRaisedSoft, RoundedCornerShape(8.dp))
+                                .border(1.dp, NovellumLineSoft, RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("+", color = NovellumTextSoft, fontSize = 20.sp)
+                        }
+                    }
+
+                    Spacer(Modifier.weight(0.75f))
+                    VaultEmptyIllustration()
+                    Spacer(Modifier.height(16.dp))
                     Text(
-                        text = if (tab == "Vault") "Vault is Empty" else "Library is Empty",
+                        if (tab == "Vault") "Your vault is empty." else "Your library is empty.",
                         color = NovellumText,
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        fontFamily = FontFamily.SansSerif
+                        fontWeight = FontWeight.Medium
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = if (tab == "Vault") {
-                            "Add snippets from the main Vault view."
-                        } else {
-                            "Add items from the main Library view."
-                        },
+                        if (tab == "Vault") "Capture ideas, fragments,\nand research here."
+                        else "Collect references and\nstaging material here.",
                         color = NovellumTextDim,
                         fontSize = 10.sp,
-                        fontFamily = FontFamily.SansSerif
+                        lineHeight = 16.sp
                     )
-                }
-
-                Spacer(Modifier.weight(1f))
-
-                WorkspaceSectionCard("Current focus") {
-                    InfoLine("Project", projectTitle ?: "None")
-                    InfoLine("Chapter", chapterTitle ?: "None")
-                    InfoLine("Scene", sceneTitle ?: "None")
-                    InfoLine("Words", sceneWordCount.toString())
+                    Spacer(Modifier.height(14.dp))
+                    Row(
+                        modifier = Modifier
+                            .background(NovellumInset, RoundedCornerShape(7.dp))
+                            .border(1.dp, NovellumLineSoft, RoundedCornerShape(7.dp))
+                            .padding(horizontal = 18.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("+", color = NovellumAccent, fontSize = 16.sp)
+                        Spacer(Modifier.width(9.dp))
+                        Text("New Entry", color = NovellumAccentGlow, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+                    }
+                    Spacer(Modifier.weight(1f))
                 }
             }
+        }
+
+        Spacer(Modifier.height(12.dp))
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(listOf(Color(0xFF0F161C), Color(0xFF0B1117))),
+                    RoundedCornerShape(13.dp)
+                )
+                .border(1.dp, NovellumLineSoft.copy(alpha = 0.86f), RoundedCornerShape(13.dp))
+                .padding(horizontal = 18.dp, vertical = 16.dp)
+        ) {
+            Text("CURRENT FOCUS", color = NovellumTextDim, fontSize = 9.sp, letterSpacing = 0.7.sp)
+            Spacer(Modifier.height(12.dp))
+            FocusLine("▥", "Project", projectTitle ?: "None")
+            DividerLine()
+            FocusLine("▣", "Chapter", chapterTitle ?: "None")
+            DividerLine()
+            FocusLine("▤", "Scene", sceneTitle ?: "None")
+            DividerLine()
+            FocusLine("W", "Words", String.format(Locale.US, "%,d", sceneWordCount))
+            Spacer(Modifier.weight(1f))
+            Text(
+                "Chapter ${String.format(Locale.US, "%,d", chapterWordCount)}  ·  Project ${String.format(Locale.US, "%,d", projectWordCount)}",
+                color = NovellumTextDim.copy(alpha = 0.70f),
+                fontSize = 8.sp
+            )
         }
     }
 }
 
 @Composable
-private fun WorkspaceSectionCard(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(NovellumRaisedSoft, RoundedCornerShape(12.dp))
-            .border(1.dp, NovellumLineSoft, RoundedCornerShape(12.dp))
-            .padding(14.dp)
-    ) {
-        Text(
-            text = title,
-            color = NovellumText,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            fontFamily = FontFamily.SansSerif
+private fun VaultEmptyIllustration() {
+    Canvas(modifier = Modifier.size(104.dp)) {
+        val center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)
+        drawCircle(NovellumAccent.copy(alpha = 0.10f), size.minDimension * 0.45f, center, style = Stroke(1.dp.toPx()))
+        drawCircle(NovellumAccent.copy(alpha = 0.18f), size.minDimension * 0.31f, center, style = Stroke(1.dp.toPx()))
+        drawRoundRect(
+            color = NovellumTextDim.copy(alpha = 0.45f),
+            topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.27f, size.height * 0.30f),
+            size = androidx.compose.ui.geometry.Size(size.width * 0.48f, size.height * 0.52f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(5.dp.toPx()),
+            style = Stroke(1.dp.toPx())
         )
-        Spacer(Modifier.height(12.dp))
-        content()
+        drawRoundRect(
+            color = NovellumTextSoft,
+            topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.34f, size.height * 0.23f),
+            size = androidx.compose.ui.geometry.Size(size.width * 0.48f, size.height * 0.52f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(5.dp.toPx()),
+            style = Stroke(1.25.dp.toPx())
+        )
+        drawLine(
+            NovellumAccent,
+            androidx.compose.ui.geometry.Offset(center.x - 8.dp.toPx(), center.y),
+            androidx.compose.ui.geometry.Offset(center.x + 8.dp.toPx(), center.y),
+            1.4.dp.toPx(),
+            StrokeCap.Round
+        )
+        drawLine(
+            NovellumAccent,
+            androidx.compose.ui.geometry.Offset(center.x, center.y - 8.dp.toPx()),
+            androidx.compose.ui.geometry.Offset(center.x, center.y + 8.dp.toPx()),
+            1.4.dp.toPx(),
+            StrokeCap.Round
+        )
     }
 }
 
 @Composable
-private fun InfoLine(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth()) {
+private fun FocusLine(symbol: String, label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(42.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(symbol, color = NovellumTextSoft, fontSize = 13.sp, modifier = Modifier.width(28.dp))
+        Text(label, color = NovellumTextSoft, fontSize = 10.sp, modifier = Modifier.width(70.dp))
         Text(
-            text = label,
-            color = NovellumTextDim,
+            value,
+            color = NovellumAccentGlow,
             fontSize = 10.sp,
-            fontFamily = FontFamily.SansSerif,
-            modifier = Modifier.width(86.dp)
-        )
-        Text(
-            text = value,
-            color = NovellumTextSoft,
-            fontSize = 10.sp,
-            fontFamily = FontFamily.SansSerif,
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
     }
-    Spacer(Modifier.height(6.dp))
 }
 
 @Composable
@@ -1734,12 +1964,15 @@ private fun ChapterPreview(
     pageNumber: Int = 1,
     pageCount: Int = 1
 ) {
-    val cardShape = RoundedCornerShape(14.dp)
+    val cardShape = RoundedCornerShape(13.dp)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(NovellumCanvas)
-            .padding(14.dp),
+            .background(
+                Brush.verticalGradient(listOf(Color(0xFF0D141A), NovellumEditor)),
+                cardShape
+            )
+            .border(1.dp, NovellumLineSoft.copy(alpha = 0.90f), cardShape),
         contentAlignment = Alignment.TopCenter
     ) {
         Column(
@@ -1747,8 +1980,6 @@ private fun ChapterPreview(
                 .fillMaxHeight()
                 .widthIn(max = 980.dp)
                 .fillMaxWidth()
-                .background(NovellumEditor, cardShape)
-                .border(1.dp, NovellumLineSoft, cardShape)
         ) {
             Row(
                 modifier = Modifier
@@ -1758,14 +1989,13 @@ private fun ChapterPreview(
             ) {
                 Row(
                     modifier = Modifier
-                        .background(NovellumRaisedSoft, RoundedCornerShape(999.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .padding(vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("◎", color = NovellumTextDim, fontSize = 10.sp)
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        text = "READ-ONLY PREVIEW",
+                        text = "READ-ONLY MANUSCRIPT",
                         color = NovellumTextDim,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -1781,14 +2011,7 @@ private fun ChapterPreview(
                     fontFamily = FontFamily.SansSerif
                 )
                 Spacer(Modifier.weight(1f))
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .background(NovellumRaisedSoft, RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("⛶", color = NovellumTextDim, fontSize = 12.sp)
-                }
+                Text("⛶", color = NovellumTextDim, fontSize = 12.sp)
             }
 
             Column(
@@ -1956,10 +2179,15 @@ private fun ManuscriptScenePreview(
 
 @Composable
 private fun EmptyEditorState() {
+    val shape = RoundedCornerShape(13.dp)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(NovellumCanvas),
+            .background(
+                Brush.verticalGradient(listOf(Color(0xFF0D141A), NovellumEditor)),
+                shape
+            )
+            .border(1.dp, NovellumLineSoft.copy(alpha = 0.90f), shape),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -1971,7 +2199,8 @@ private fun EmptyEditorState() {
             Box(
                 modifier = Modifier
                     .size(54.dp)
-                    .background(NovellumInset, RoundedCornerShape(16.dp))
+                    .background(NovellumInset, RoundedCornerShape(12.dp))
+                    .border(1.dp, NovellumLineSoft, RoundedCornerShape(12.dp))
                     ,
                 contentAlignment = Alignment.Center
             ) {

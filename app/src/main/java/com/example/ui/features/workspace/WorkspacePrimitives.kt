@@ -49,12 +49,15 @@ internal fun PanelSurface(
             .clip(RoundedCornerShape(WorkspaceMetrics.PanelRadius))
             .background(
                 Brush.verticalGradient(
-                    listOf(WorkspaceColors.PanelRaised, WorkspaceColors.Panel)
+                    0f to WorkspaceColors.PanelHighlight,
+                    .14f to WorkspaceColors.PanelRaised,
+                    .62f to WorkspaceColors.Panel,
+                    1f to WorkspaceColors.Deep
                 )
             )
             .border(
-                width = 1.dp,
-                color = WorkspaceColors.Hairline.copy(alpha = .88f),
+                width = .75.dp,
+                color = WorkspaceColors.HairlineBright.copy(alpha = .58f),
                 shape = RoundedCornerShape(WorkspaceMetrics.PanelRadius)
             )
     ) {
@@ -68,7 +71,7 @@ internal fun Hairline(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .height(1.dp)
-            .background(WorkspaceColors.Hairline.copy(alpha = .76f))
+            .background(WorkspaceColors.Hairline.copy(alpha = .58f))
     )
 }
 
@@ -126,6 +129,7 @@ internal fun CompactTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     selected: Boolean = false,
+    outlined: Boolean = false,
     enabled: Boolean = true,
     leadingIcon: WorkspaceIcon? = null
 ) {
@@ -139,13 +143,27 @@ internal fun CompactTextButton(
         modifier = modifier
             .height(34.dp)
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
-            .background(if (selected) WorkspaceColors.AccentWash else Color.Transparent)
+            .background(
+                when {
+                    selected -> WorkspaceColors.AccentWash
+                    outlined -> WorkspaceColors.Deep.copy(alpha = .72f)
+                    else -> Color.Transparent
+                }
+            )
             .then(
-                if (selected) Modifier.border(
-                    1.dp,
-                    WorkspaceColors.AccentMuted.copy(alpha = .45f),
-                    RoundedCornerShape(WorkspaceMetrics.ControlRadius)
-                ) else Modifier
+                when {
+                    selected -> Modifier.border(
+                        .75.dp,
+                        WorkspaceColors.AccentMuted.copy(alpha = .44f),
+                        RoundedCornerShape(WorkspaceMetrics.ControlRadius)
+                    )
+                    outlined -> Modifier.border(
+                        .75.dp,
+                        WorkspaceColors.HairlineBright.copy(alpha = .68f),
+                        RoundedCornerShape(WorkspaceMetrics.ControlRadius)
+                    )
+                    else -> Modifier
+                }
             )
             .clickable(
                 enabled = enabled,
@@ -188,8 +206,8 @@ internal fun SearchShell(
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
             .background(WorkspaceColors.Deep.copy(alpha = .76f))
             .border(
-                1.dp,
-                WorkspaceColors.Hairline.copy(alpha = .85f),
+                .75.dp,
+                WorkspaceColors.Hairline.copy(alpha = .64f),
                 RoundedCornerShape(WorkspaceMetrics.ControlRadius)
             )
             .padding(start = 11.dp, end = 4.dp),

@@ -55,7 +55,7 @@ internal fun NovellumTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            modifier = Modifier.width(if (showBrandText) 268.dp else 56.dp),
+            modifier = Modifier.width(if (showBrandText) 290.dp else 56.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             NovellumIcon(
@@ -71,7 +71,7 @@ internal fun NovellumTopBar(
 
         Row(
             modifier = Modifier.weight(1f).fillMaxHeight(),
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             WorkspaceMode.entries.forEach { mode ->
@@ -104,13 +104,11 @@ internal fun NovellumTopBar(
             CompactIconButton(
                 icon = WorkspaceIcon.PanelLeft,
                 description = if (leftPanelOpen) "Hide manuscript panel" else "Show manuscript panel",
-                selected = leftPanelOpen,
                 onClick = onToggleLeftPanel
             )
             CompactIconButton(
                 icon = WorkspaceIcon.PanelRight,
                 description = if (rightPanelOpen) "Hide auxiliary panel" else "Show auxiliary panel",
-                selected = rightPanelOpen,
                 onClick = onToggleRightPanel
             )
             CompactIconButton(
@@ -131,8 +129,15 @@ private fun TopModeButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val tint = if (selected) WorkspaceColors.AccentBright else WorkspaceColors.TextSecondary
+    val modeWidth = when {
+        !showLabel -> 48.dp
+        mode == WorkspaceMode.Manuscript -> 132.dp
+        mode == WorkspaceMode.Library -> 116.dp
+        else -> 106.dp
+    }
     Box(
         modifier = Modifier
+            .width(modeWidth)
             .fillMaxHeight()
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
             .clickable(
@@ -140,7 +145,7 @@ private fun TopModeButton(
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = if (showLabel) 14.dp else 9.dp),
+            .padding(horizontal = if (showLabel) 10.dp else 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -160,7 +165,7 @@ private fun TopModeButton(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
+                    .width(if (showLabel) modeWidth - 18.dp else 30.dp)
                     .height(2.dp)
                     .background(WorkspaceColors.Accent)
             )

@@ -1,6 +1,8 @@
 package com.example.ui.features.workspace
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,6 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,7 +57,7 @@ internal fun AuxiliaryWorkspace(
         modifier = modifier.fillMaxHeight(),
         verticalArrangement = Arrangement.spacedBy(WorkspaceMetrics.PanelGap)
     ) {
-        PanelSurface(Modifier.weight(1.14f).fillMaxWidth()) {
+        PanelSurface(Modifier.weight(1.20f).fillMaxWidth()) {
             AuxiliaryLibraryPanel(
                 selectedTab = selectedTab,
                 onTabSelected = onTabSelected,
@@ -81,7 +86,7 @@ private fun AuxiliaryLibraryPanel(
     var query by remember(selectedTab) { mutableStateOf("") }
     Column(modifier) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(58.dp).padding(horizontal = 12.dp),
+            modifier = Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AuxiliaryTab.entries.forEach { tab ->
@@ -140,6 +145,7 @@ private fun AuxiliaryLibraryPanel(
             CompactTextButton(
                 label = "New entry",
                 leadingIcon = WorkspaceIcon.Add,
+                outlined = true,
                 onClick = { onUnavailableAction("New ${selectedTab.label} entry") },
                 modifier = Modifier.padding(top = 16.dp)
             )
@@ -151,20 +157,62 @@ private fun AuxiliaryLibraryPanel(
 private fun AuxiliaryEmptyGlyph(tab: AuxiliaryTab) {
     Box(
         modifier = Modifier
-            .size(88.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(WorkspaceColors.AccentWash),
+            .size(104.dp),
         contentAlignment = Alignment.Center
     ) {
-        NovellumIcon(
-            icon = when (tab) {
-                AuxiliaryTab.Vault -> WorkspaceIcon.Vault
-                AuxiliaryTab.Library -> WorkspaceIcon.Library
-                AuxiliaryTab.Notes -> WorkspaceIcon.Document
-            },
-            tint = WorkspaceColors.Accent,
-            modifier = Modifier.size(43.dp)
-        )
+        Canvas(Modifier.fillMaxSize()) {
+            drawCircle(
+                color = WorkspaceColors.Accent.copy(alpha = .08f),
+                radius = size.minDimension * .46f,
+                style = Stroke(width = 1.dp.toPx())
+            )
+            drawCircle(
+                color = WorkspaceColors.Accent.copy(alpha = .17f),
+                radius = size.minDimension * .34f,
+                style = Stroke(width = .75.dp.toPx())
+            )
+            drawLine(
+                color = WorkspaceColors.Accent.copy(alpha = .22f),
+                start = Offset(center.x - size.minDimension * .48f, center.y),
+                end = Offset(center.x - size.minDimension * .40f, center.y),
+                strokeWidth = 1.dp.toPx()
+            )
+            drawLine(
+                color = WorkspaceColors.Accent.copy(alpha = .22f),
+                start = Offset(center.x + size.minDimension * .40f, center.y),
+                end = Offset(center.x + size.minDimension * .48f, center.y),
+                strokeWidth = 1.dp.toPx()
+            )
+        }
+        Box(
+            modifier = Modifier
+                .size(58.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(WorkspaceColors.Deep.copy(alpha = .92f))
+                .border(
+                    .75.dp,
+                    WorkspaceColors.Accent.copy(alpha = .48f),
+                    RoundedCornerShape(13.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            NovellumIcon(
+                icon = when (tab) {
+                    AuxiliaryTab.Vault -> WorkspaceIcon.Document
+                    AuxiliaryTab.Library -> WorkspaceIcon.Library
+                    AuxiliaryTab.Notes -> WorkspaceIcon.Document
+                },
+                tint = WorkspaceColors.TextSecondary,
+                modifier = Modifier.size(34.dp)
+            )
+            if (tab == AuxiliaryTab.Vault) {
+                NovellumIcon(
+                    icon = WorkspaceIcon.Add,
+                    tint = WorkspaceColors.Accent,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
     }
 }
 

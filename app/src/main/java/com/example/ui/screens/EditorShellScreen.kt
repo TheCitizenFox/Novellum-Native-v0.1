@@ -194,7 +194,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
     ) {
         val wideLayout = maxWidth >= 980.dp
         val showBrandText = maxWidth >= 820.dp
-        val showModeLabels = maxWidth >= 760.dp
+        val showModeLabels = maxWidth >= 940.dp
 
         Column(Modifier.fillMaxSize()) {
             NovellumTopBar(

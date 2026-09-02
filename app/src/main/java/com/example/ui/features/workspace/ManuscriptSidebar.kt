@@ -256,7 +256,7 @@ private fun ManuscriptTree(
     }
 
     Column(modifier) {
-        Column(Modifier.padding(start = 18.dp, end = 14.dp, top = 16.dp)) {
+        Column(Modifier.padding(start = 18.dp, end = 14.dp, top = 20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("MANUSCRIPT", style = WorkspaceType.Eyebrow, modifier = Modifier.weight(1f))
                 CompactIconButton(
@@ -274,7 +274,7 @@ private fun ManuscriptTree(
                     iconSize = 16.dp
                 )
             }
-            Text("PROJECT", style = WorkspaceType.Eyebrow, modifier = Modifier.padding(top = 10.dp))
+            Text("PROJECT", style = WorkspaceType.Eyebrow, modifier = Modifier.padding(top = 12.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -283,7 +283,7 @@ private fun ManuscriptTree(
                         onClick = onShowProjectList,
                         onLongClick = { onEditProject(selectedProject) }
                     )
-                    .padding(vertical = 5.dp),
+                    .padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -307,7 +307,7 @@ private fun ManuscriptTree(
                 placeholder = "Search manuscript…",
                 onValueChange = { query = it },
                 onFilter = { onUnavailableAction("Manuscript filters") },
-                modifier = Modifier.padding(top = 12.dp, bottom = 10.dp)
+                modifier = Modifier.padding(top = 13.dp, bottom = 12.dp)
             )
         }
 
@@ -318,7 +318,7 @@ private fun ManuscriptTree(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 start = 10.dp,
                 end = 10.dp,
-                top = 8.dp,
+                top = 10.dp,
                 bottom = 12.dp
             )
         ) {
@@ -409,9 +409,15 @@ private fun ChapterTreeRow(
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
             .background(if (selected) WorkspaceColors.AccentWash else Color.Transparent)
             .combinedClickable(onClick = onSelect, onLongClick = onEdit)
-            .padding(start = 3.dp),
+            .padding(start = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(
+            modifier = Modifier
+                .width(2.dp)
+                .height(20.dp)
+                .background(if (selected) WorkspaceColors.Accent else Color.Transparent)
+        )
         CompactIconButton(
             icon = if (expanded) WorkspaceIcon.ChevronDown else WorkspaceIcon.ChevronRight,
             description = if (expanded) "Collapse ${chapter.title}" else "Expand ${chapter.title}",
@@ -560,7 +566,12 @@ private fun StatCell(label: String, value: String, modifier: Modifier = Modifier
 
 @Composable
 private fun VerticalHairline() {
-    Spacer(Modifier.width(1.dp).height(36.dp).background(WorkspaceColors.Hairline))
+    Spacer(
+        Modifier
+            .width(1.dp)
+            .height(36.dp)
+            .background(WorkspaceColors.Hairline.copy(alpha = .68f))
+    )
 }
 
 @Composable

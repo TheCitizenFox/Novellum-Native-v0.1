@@ -8,21 +8,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 internal object WorkspaceColors {
-    val Void = Color(0xFF070B0E)
-    val Deep = Color(0xFF0A1014)
-    val Panel = Color(0xFF0D1418)
-    val PanelRaised = Color(0xFF11191E)
-    val PanelSoft = Color(0xFF141D22)
-    val Editor = Color(0xFF0A1014)
-    val Accent = Color(0xFFF18A38)
-    val AccentBright = Color(0xFFFFA45D)
-    val AccentMuted = Color(0xFF6B3A1D)
-    val AccentWash = Color(0x1FF18A38)
-    val TextPrimary = Color(0xFFE8E3DC)
-    val TextSecondary = Color(0xFFAAA8A4)
-    val TextMuted = Color(0xFF6F767A)
-    val Hairline = Color(0xFF202A30)
-    val HairlineBright = Color(0xFF2A363D)
+    val Void = Color(0xFF060A0D)
+    val Deep = Color(0xFF090F13)
+    val Panel = Color(0xFF0B1216)
+    val PanelRaised = Color(0xFF10181D)
+    val PanelHighlight = Color(0xFF151E23)
+    val PanelSoft = Color(0xFF121B20)
+    val Editor = Color(0xFF090F13)
+    val Accent = Color(0xFFE98A3E)
+    val AccentBright = Color(0xFFF1A064)
+    val AccentMuted = Color(0xFF5A321C)
+    val AccentWash = Color(0x14E98A3E)
+    val TextPrimary = Color(0xFFD8D3CC)
+    val ManuscriptText = Color(0xFFCDC7BF)
+    val TextSecondary = Color(0xFF979A99)
+    val TextMuted = Color(0xFF71787B)
+    val Hairline = Color(0xFF1E292F)
+    val HairlineBright = Color(0xFF29363D)
     val Success = Color(0xFF8FB49C)
     val Warning = Color(0xFFE6AD66)
     val Danger = Color(0xFFD87870)
@@ -36,7 +38,7 @@ internal object WorkspaceMetrics {
     val ControlRadius = 9.dp
     val TopBarHeight = 62.dp
     val LeftPanelWidth = 278.dp
-    val RightPanelWidth = 292.dp
+    val RightPanelWidth = 300.dp
     val OverlayPanelWidth = 306.dp
 }
 
@@ -44,7 +46,7 @@ internal object WorkspaceType {
     val Brand = TextStyle(
         fontFamily = FontFamily.Serif,
         fontWeight = FontWeight.Medium,
-        fontSize = 18.sp,
+        fontSize = 17.sp,
         letterSpacing = 4.sp,
         color = WorkspaceColors.TextPrimary
     )
@@ -76,25 +78,25 @@ internal object WorkspaceType {
     val SceneTitle = TextStyle(
         fontFamily = FontFamily.Serif,
         fontWeight = FontWeight.Medium,
-        fontSize = 23.sp,
-        lineHeight = 29.sp,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
         color = WorkspaceColors.TextPrimary
     )
 
     val Manuscript = TextStyle(
         fontFamily = FontFamily.Serif,
         fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
-        lineHeight = 33.sp,
-        letterSpacing = 0.15.sp,
-        color = WorkspaceColors.TextPrimary
+        fontSize = 18.5.sp,
+        lineHeight = 30.5.sp,
+        letterSpacing = 0.1.sp,
+        color = WorkspaceColors.ManuscriptText
     )
 
     val PreviewTitle = TextStyle(
         fontFamily = FontFamily.Serif,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 17.sp,
-        lineHeight = 24.sp,
+        fontSize = 16.5.sp,
+        lineHeight = 23.sp,
         color = WorkspaceColors.TextPrimary
     )
 }

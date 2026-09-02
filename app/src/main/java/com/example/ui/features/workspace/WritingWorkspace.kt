@@ -332,8 +332,8 @@ private fun EditorToolbar(
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
             .background(WorkspaceColors.PanelSoft.copy(alpha = .74f))
             .border(
-                1.dp,
-                WorkspaceColors.Hairline.copy(alpha = .9f),
+                .75.dp,
+                WorkspaceColors.HairlineBright.copy(alpha = .62f),
                 RoundedCornerShape(WorkspaceMetrics.ControlRadius)
             )
             .horizontalScroll(rememberScrollState())
@@ -493,8 +493,7 @@ private fun ChapterPreview(
             CompactTextButton(
                 label = "Read-only preview",
                 leadingIcon = WorkspaceIcon.Manuscript,
-                selected = true,
-                enabled = false,
+                outlined = true,
                 onClick = {}
             )
         }
@@ -513,12 +512,12 @@ private fun ChapterPreview(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        start = 42.dp,
-                        end = 42.dp,
-                        top = 30.dp,
-                        bottom = 54.dp
+                        start = 48.dp,
+                        end = 48.dp,
+                        top = 27.dp,
+                        bottom = 48.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(30.dp)
+                    verticalArrangement = Arrangement.spacedBy(26.dp)
                 ) {
                     items(scenes.sortedBy { it.orderIndex }, key = { it.id }) { scene ->
                         Column(
@@ -535,13 +534,19 @@ private fun ChapterPreview(
                                 )
                             }
                             Text(
-                                text = scene.prose.ifBlank { "Empty scene" },
+                                text = scene.prose
+                                    .trimStart('\n', '\r')
+                                    .ifBlank { "Empty scene" },
                                 style = WorkspaceType.Manuscript.copy(
-                                    color = if (scene.prose.isBlank()) WorkspaceColors.TextMuted else WorkspaceColors.TextPrimary
+                                    color = if (scene.prose.isBlank()) {
+                                        WorkspaceColors.TextMuted
+                                    } else {
+                                        WorkspaceColors.ManuscriptText
+                                    }
                                 ),
-                                modifier = Modifier.padding(top = 12.dp)
+                                modifier = Modifier.padding(top = 16.dp)
                             )
-                            Hairline(Modifier.padding(top = 24.dp))
+                            Hairline(Modifier.padding(top = 22.dp))
                         }
                     }
                 }

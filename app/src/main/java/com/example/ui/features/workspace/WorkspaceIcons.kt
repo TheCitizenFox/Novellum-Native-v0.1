@@ -12,7 +12,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 internal enum class WorkspaceIcon {
     Brand,
@@ -71,7 +74,12 @@ private fun DrawScope.drawWorkspaceIcon(icon: WorkspaceIcon, tint: Color) {
 
     when (icon) {
         WorkspaceIcon.Brand -> {
-            drawCircle(tint.copy(alpha = 0.28f), unit * 0.16f, at(.5f, .5f), style = Stroke(stroke * .55f))
+            drawCircle(
+                color = tint.copy(alpha = 0.28f),
+                radius = unit * 0.16f,
+                center = at(.5f, .5f),
+                style = Stroke(stroke * .55f)
+            )
             drawLine(tint, at(.5f, .08f), at(.5f, .92f), stroke * .68f, StrokeCap.Round)
             drawLine(tint, at(.08f, .5f), at(.92f, .5f), stroke * .68f, StrokeCap.Round)
             drawLine(tint, at(.22f, .22f), at(.78f, .78f), stroke * .42f, StrokeCap.Round)
@@ -131,21 +139,27 @@ private fun DrawScope.drawWorkspaceIcon(icon: WorkspaceIcon, tint: Color) {
             drawLine(tint, at(.50f, .53f), at(.66f, .62f), stroke, StrokeCap.Round)
         }
         WorkspaceIcon.Settings -> {
-            drawCircle(tint, unit * .14f, at(.5f, .5f), style = style)
-            for (i in 0..3) {
-                val horizontal = i % 2 == 0
-                if (horizontal) {
-                    drawLine(tint, at(.10f, .5f), at(.26f, .5f), stroke, StrokeCap.Round)
-                    drawLine(tint, at(.74f, .5f), at(.90f, .5f), stroke, StrokeCap.Round)
-                } else {
-                    drawLine(tint, at(.5f, .10f), at(.5f, .26f), stroke, StrokeCap.Round)
-                    drawLine(tint, at(.5f, .74f), at(.5f, .90f), stroke, StrokeCap.Round)
-                }
+            drawCircle(tint, unit * .27f, at(.5f, .5f), style = Stroke(stroke * .72f))
+            drawCircle(tint, unit * .10f, at(.5f, .5f), style = Stroke(stroke * .78f))
+            repeat(8) { index ->
+                val angle = (index * PI / 4.0).toFloat()
+                val innerRadius = unit * .30f
+                val outerRadius = unit * .42f
+                val center = at(.5f, .5f)
+                drawLine(
+                    color = tint,
+                    start = Offset(
+                        center.x + cos(angle) * innerRadius,
+                        center.y + sin(angle) * innerRadius
+                    ),
+                    end = Offset(
+                        center.x + cos(angle) * outerRadius,
+                        center.y + sin(angle) * outerRadius
+                    ),
+                    strokeWidth = stroke * .78f,
+                    cap = StrokeCap.Round
+                )
             }
-            drawLine(tint, at(.22f, .22f), at(.32f, .32f), stroke, StrokeCap.Round)
-            drawLine(tint, at(.68f, .68f), at(.78f, .78f), stroke, StrokeCap.Round)
-            drawLine(tint, at(.78f, .22f), at(.68f, .32f), stroke, StrokeCap.Round)
-            drawLine(tint, at(.32f, .68f), at(.22f, .78f), stroke, StrokeCap.Round)
         }
         WorkspaceIcon.PanelLeft, WorkspaceIcon.PanelRight, WorkspaceIcon.Split -> {
             drawRoundRect(tint, at(.13f, .18f), Size(unit * .74f, unit * .64f), CornerRadius(unit * .06f), style = style)

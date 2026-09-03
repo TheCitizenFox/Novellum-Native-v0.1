@@ -8,26 +8,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 internal object WorkspaceColors {
-    // Near-black graphite palette tuned to the latest reference. The previous
-    // clean-room pass read too blue/raised; these surfaces intentionally sit
-    // much closer together so the workspace feels continuous rather than carded.
-    val Void = Color(0xFF020506)
-    val Deep = Color(0xFF040708)
-    val Panel = Color(0xFF060A0C)
-    val PanelRaised = Color(0xFF090E11)
-    val PanelHighlight = Color(0xFF0C1215)
-    val PanelSoft = Color(0xFF080D10)
-    val Editor = Color(0xFF05090B)
+    val Void = Color(0xFF060A0D)
+    val Deep = Color(0xFF090F13)
+    val Panel = Color(0xFF0B1216)
+    val PanelRaised = Color(0xFF10181D)
+    val PanelHighlight = Color(0xFF151E23)
+    val PanelSoft = Color(0xFF121B20)
+    val Editor = Color(0xFF090F13)
     val Accent = Color(0xFFE98A3E)
     val AccentBright = Color(0xFFF1A064)
     val AccentMuted = Color(0xFF5A321C)
-    val AccentWash = Color(0x12E98A3E)
-    val TextPrimary = Color(0xFFD2CEC8)
-    val ManuscriptText = Color(0xFFC6C1B9)
-    val TextSecondary = Color(0xFF8D9292)
-    val TextMuted = Color(0xFF666D70)
-    val Hairline = Color(0xFF151D21)
-    val HairlineBright = Color(0xFF20292E)
+    val AccentWash = Color(0x14E98A3E)
+    val TextPrimary = Color(0xFFD8D3CC)
+    val ManuscriptText = Color(0xFFCDC7BF)
+    val TextSecondary = Color(0xFF979A99)
+    val TextMuted = Color(0xFF71787B)
+    val Hairline = Color(0xFF1E292F)
+    val HairlineBright = Color(0xFF29363D)
     val Success = Color(0xFF8FB49C)
     val Warning = Color(0xFFE6AD66)
     val Danger = Color(0xFFD87870)
@@ -35,14 +32,14 @@ internal object WorkspaceColors {
 }
 
 internal object WorkspaceMetrics {
-    val OuterPadding = 0.dp
-    val PanelGap = 1.dp
-    val PanelRadius = 0.dp
-    val ControlRadius = 7.dp
-    val TopBarHeight = 64.dp
-    val LeftPanelWidth = 272.dp
-    val RightPanelWidth = 308.dp
-    val OverlayPanelWidth = 300.dp
+    val OuterPadding = 10.dp
+    val PanelGap = 10.dp
+    val PanelRadius = 14.dp
+    val ControlRadius = 9.dp
+    val TopBarHeight = 62.dp
+    val LeftPanelWidth = 278.dp
+    val RightPanelWidth = 300.dp
+    val OverlayPanelWidth = 306.dp
 }
 
 internal object WorkspaceType {

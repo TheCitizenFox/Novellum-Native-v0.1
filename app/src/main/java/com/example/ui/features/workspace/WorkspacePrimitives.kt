@@ -53,13 +53,19 @@ internal fun PanelSurface(
 ) {
     Box(
         modifier = modifier
+            .clip(RoundedCornerShape(WorkspaceMetrics.PanelRadius))
             .background(
                 Brush.verticalGradient(
-                    0f to WorkspaceColors.PanelHighlight.copy(alpha = .72f),
-                    .16f to WorkspaceColors.PanelRaised.copy(alpha = .72f),
-                    .58f to WorkspaceColors.Panel,
+                    0f to WorkspaceColors.PanelHighlight,
+                    .14f to WorkspaceColors.PanelRaised,
+                    .62f to WorkspaceColors.Panel,
                     1f to WorkspaceColors.Deep
                 )
+            )
+            .border(
+                width = .75.dp,
+                color = WorkspaceColors.HairlineBright.copy(alpha = .58f),
+                shape = RoundedCornerShape(WorkspaceMetrics.PanelRadius)
             )
     ) {
         Canvas(Modifier.fillMaxSize()) {
@@ -71,8 +77,8 @@ internal fun PanelSurface(
             while (y < size.height) {
                 var x = ((row * 17) % 29).toFloat()
                 while (x < size.width) {
-                    val alpha = if (((x.toInt() + y.toInt()) / 23) % 3 == 0) .014f else .007f
-                    drawCircle(WorkspaceColors.TextPrimary.copy(alpha = alpha), radius = .48f, center = androidx.compose.ui.geometry.Offset(x, y))
+                    val alpha = if (((x.toInt() + y.toInt()) / 23) % 3 == 0) .026f else .014f
+                    drawCircle(WorkspaceColors.TextPrimary.copy(alpha = alpha), radius = .55f, center = androidx.compose.ui.geometry.Offset(x, y))
                     x += step * 2.35f
                 }
                 y += step

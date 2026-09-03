@@ -57,20 +57,24 @@ internal fun AuxiliaryWorkspace(
     onUnavailableAction: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PanelSurface(modifier = modifier.fillMaxHeight()) {
-        Column(Modifier.fillMaxSize()) {
+    Column(
+        modifier = modifier.fillMaxHeight(),
+        verticalArrangement = Arrangement.spacedBy(WorkspaceMetrics.PanelGap)
+    ) {
+        PanelSurface(Modifier.weight(1.20f).fillMaxWidth()) {
             AuxiliaryLibraryPanel(
                 selectedTab = selectedTab,
                 onTabSelected = onTabSelected,
                 onUnavailableAction = onUnavailableAction,
-                modifier = Modifier.weight(1.20f).fillMaxWidth()
+                modifier = Modifier.fillMaxHeight()
             )
-            Hairline()
+        }
+        PanelSurface(Modifier.weight(.78f).fillMaxWidth()) {
             CurrentFocusPanel(
                 project = selectedProject,
                 chapter = selectedChapter,
                 scene = selectedScene,
-                modifier = Modifier.weight(.78f).fillMaxWidth()
+                modifier = Modifier.fillMaxHeight()
             )
         }
     }

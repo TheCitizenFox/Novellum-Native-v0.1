@@ -50,6 +50,7 @@ internal enum class WorkspaceIcon {
     Chapter,
     Words,
     Close,
+    Delete,
     Check
 }
 
@@ -174,6 +175,13 @@ private fun DrawScope.drawWorkspaceIcon(icon: WorkspaceIcon, tint: Color) {
             drawCircle(tint, unit * .055f, at(.5f, .24f))
             drawCircle(tint, unit * .055f, at(.5f, .5f))
             drawCircle(tint, unit * .055f, at(.5f, .76f))
+        }
+        WorkspaceIcon.Delete -> {
+            drawRoundRect(tint, at(.29f, .31f), Size(unit * .42f, unit * .52f), CornerRadius(unit * .035f), style = style)
+            drawLine(tint, at(.23f, .25f), at(.77f, .25f), stroke, StrokeCap.Round)
+            drawLine(tint, at(.40f, .16f), at(.60f, .16f), stroke, StrokeCap.Round)
+            drawLine(tint, at(.42f, .42f), at(.42f, .70f), stroke * .7f, StrokeCap.Round)
+            drawLine(tint, at(.58f, .42f), at(.58f, .70f), stroke * .7f, StrokeCap.Round)
         }
         WorkspaceIcon.Add -> {
             drawLine(tint, at(.2f, .5f), at(.8f, .5f), stroke, StrokeCap.Round)

@@ -1,5 +1,10 @@
 package com.example.ui.features.workspace
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,7 +33,7 @@ internal enum class WorkspaceMode(
     val icon: WorkspaceIcon
 ) {
     Editor("Editor", WorkspaceIcon.Editor),
-    Cards("Cards", WorkspaceIcon.Cards),
+    Cards("Structure", WorkspaceIcon.Cards),
     Vault("Vault", WorkspaceIcon.Vault),
     Library("Library", WorkspaceIcon.Library),
     Manuscript("Manuscript", WorkspaceIcon.Manuscript)
@@ -128,7 +134,11 @@ private fun TopModeButton(
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val tint = if (selected) WorkspaceColors.AccentBright else WorkspaceColors.TextSecondary
+    val tint by animateColorAsState(
+        targetValue = if (selected) WorkspaceColors.AccentBright else WorkspaceColors.TextSecondary,
+        animationSpec = spring(stiffness = 430f, dampingRatio = .86f),
+        label = "topModeTint"
+    )
     val modeWidth = when {
         !showLabel -> 48.dp
         mode == WorkspaceMode.Manuscript -> 132.dp
@@ -161,10 +171,14 @@ private fun TopModeButton(
                 )
             }
         }
-        if (selected) {
+        AnimatedVisibility(
+            visible = selected,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
                     .width(if (showLabel) modeWidth - 18.dp else 30.dp)
                     .height(2.dp)
                     .background(WorkspaceColors.Accent)

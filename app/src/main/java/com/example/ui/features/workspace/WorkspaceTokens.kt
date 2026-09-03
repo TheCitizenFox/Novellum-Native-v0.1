@@ -77,26 +77,26 @@ internal object WorkspaceType {
 
     val SceneTitle = TextStyle(
         fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
+        fontWeight = FontWeight.Normal,
+        fontSize = 20.5.sp,
+        lineHeight = 27.sp,
         color = WorkspaceColors.TextPrimary
     )
 
     val Manuscript = TextStyle(
         fontFamily = FontFamily.Serif,
         fontWeight = FontWeight.Normal,
-        fontSize = 18.5.sp,
-        lineHeight = 30.5.sp,
-        letterSpacing = 0.1.sp,
+        fontSize = 17.25.sp,
+        lineHeight = 28.5.sp,
+        letterSpacing = 0.12.sp,
         color = WorkspaceColors.ManuscriptText
     )
 
     val PreviewTitle = TextStyle(
         fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 16.5.sp,
-        lineHeight = 23.sp,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 22.5.sp,
         color = WorkspaceColors.TextPrimary
     )
 }

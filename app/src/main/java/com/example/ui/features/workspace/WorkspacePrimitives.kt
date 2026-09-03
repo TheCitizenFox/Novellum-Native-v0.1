@@ -1,15 +1,21 @@
 package com.example.ui.features.workspace
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -61,6 +68,23 @@ internal fun PanelSurface(
                 shape = RoundedCornerShape(WorkspaceMetrics.PanelRadius)
             )
     ) {
+        Canvas(Modifier.matchParentSize()) {
+            // Extremely restrained deterministic matte grain. It should register as material,
+            // not as a visible texture pattern.
+            val step = 23f
+            var y = 9f
+            var row = 0
+            while (y < size.height) {
+                var x = ((row * 17) % 29).toFloat()
+                while (x < size.width) {
+                    val alpha = if (((x.toInt() + y.toInt()) / 23) % 3 == 0) .026f else .014f
+                    drawCircle(WorkspaceColors.TextPrimary.copy(alpha = alpha), radius = .55f, center = androidx.compose.ui.geometry.Offset(x, y))
+                    x += step * 2.35f
+                }
+                y += step
+                row++
+            }
+        }
         content()
     }
 }
@@ -87,18 +111,30 @@ internal fun CompactIconButton(
     iconSize: Dp = 18.dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val background = when {
-        selected -> WorkspaceColors.AccentWash
-        else -> Color.Transparent
-    }
-    val tint = when {
-        !enabled -> WorkspaceColors.TextMuted.copy(alpha = .42f)
-        selected -> WorkspaceColors.Accent
-        else -> WorkspaceColors.TextSecondary
-    }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val background by animateColorAsState(
+        targetValue = if (selected) WorkspaceColors.AccentWash else Color.Transparent,
+        animationSpec = spring(stiffness = 520f, dampingRatio = .82f),
+        label = "iconBackground"
+    )
+    val tint by animateColorAsState(
+        targetValue = when {
+            !enabled -> WorkspaceColors.TextMuted.copy(alpha = .42f)
+            selected -> WorkspaceColors.Accent
+            else -> WorkspaceColors.TextSecondary
+        },
+        animationSpec = spring(stiffness = 520f, dampingRatio = .82f),
+        label = "iconTint"
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && enabled) .94f else 1f,
+        animationSpec = spring(stiffness = 650f, dampingRatio = .72f),
+        label = "iconPress"
+    )
     Box(
         modifier = modifier
             .size(size)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
             .background(background)
             .then(
@@ -134,13 +170,24 @@ internal fun CompactTextButton(
     leadingIcon: WorkspaceIcon? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val tint = when {
-        !enabled -> WorkspaceColors.TextMuted.copy(alpha = .42f)
-        selected -> WorkspaceColors.AccentBright
-        else -> WorkspaceColors.TextSecondary
-    }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val tint by animateColorAsState(
+        targetValue = when {
+            !enabled -> WorkspaceColors.TextMuted.copy(alpha = .42f)
+            selected -> WorkspaceColors.AccentBright
+            else -> WorkspaceColors.TextSecondary
+        },
+        animationSpec = spring(stiffness = 520f, dampingRatio = .82f),
+        label = "textButtonTint"
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && enabled) .975f else 1f,
+        animationSpec = spring(stiffness = 650f, dampingRatio = .74f),
+        label = "textButtonPress"
+    )
     Row(
         modifier = modifier
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .height(34.dp)
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
             .background(

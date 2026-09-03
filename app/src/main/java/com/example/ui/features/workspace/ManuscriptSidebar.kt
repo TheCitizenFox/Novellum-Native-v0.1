@@ -1,12 +1,5 @@
 package com.example.ui.features.workspace
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -14,7 +7,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,10 +19,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,25 +36,6 @@ import androidx.compose.ui.unit.sp
 import com.example.data.entity.ChapterEntity
 import com.example.data.entity.ProjectEntity
 import com.example.data.entity.SceneEntity
-
-private sealed interface TreeDeleteRequest {
-    val title: String
-
-    data class Project(
-        val entity: ProjectEntity,
-        val chapterCount: Int,
-        val sceneCount: Int,
-        val words: Int
-    ) : TreeDeleteRequest { override val title = entity.title }
-
-    data class Chapter(
-        val entity: ChapterEntity,
-        val sceneCount: Int,
-        val words: Int
-    ) : TreeDeleteRequest { override val title = entity.title }
-
-    data class Scene(val entity: SceneEntity) : TreeDeleteRequest { override val title = entity.title }
-}
 
 @Composable
 internal fun ManuscriptSidebar(
@@ -85,12 +54,9 @@ internal fun ManuscriptSidebar(
     onChapterSelected: (String) -> Unit,
     onSceneSelected: (String) -> Unit,
     onToggleChapter: (String) -> Unit,
-    onRenameProject: (String, String) -> Unit,
-    onRenameChapter: (String, String) -> Unit,
-    onRenameScene: (String, String) -> Unit,
-    onDeleteProject: (String) -> Unit,
-    onDeleteChapter: (String) -> Unit,
-    onDeleteScene: (String) -> Unit,
+    onEditProject: (ProjectEntity) -> Unit,
+    onEditChapter: (ChapterEntity) -> Unit,
+    onEditScene: (SceneEntity) -> Unit,
     onBackup: () -> Unit,
     onExport: () -> Unit,
     onUnavailableAction: (String) -> Unit,
@@ -102,6 +68,7 @@ internal fun ManuscriptSidebar(
                 projects = projects,
                 onProjectSelected = onProjectSelected,
                 onNewProject = onNewProject,
+                onEditProject = onEditProject,
                 modifier = Modifier.fillMaxHeight()
             )
         } else {
@@ -118,12 +85,9 @@ internal fun ManuscriptSidebar(
                 onChapterSelected = onChapterSelected,
                 onSceneSelected = onSceneSelected,
                 onToggleChapter = onToggleChapter,
-                onRenameProject = onRenameProject,
-                onRenameChapter = onRenameChapter,
-                onRenameScene = onRenameScene,
-                onDeleteProject = onDeleteProject,
-                onDeleteChapter = onDeleteChapter,
-                onDeleteScene = onDeleteScene,
+                onEditProject = onEditProject,
+                onEditChapter = onEditChapter,
+                onEditScene = onEditScene,
                 onBackup = onBackup,
                 onExport = onExport,
                 onUnavailableAction = onUnavailableAction,
@@ -138,14 +102,26 @@ private fun ProjectShelf(
     projects: List<ProjectEntity>,
     onProjectSelected: (String) -> Unit,
     onNewProject: () -> Unit,
+    onEditProject: (ProjectEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier.padding(18.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text("PROJECT SHELF", style = WorkspaceType.Eyebrow, modifier = Modifier.weight(1f))
-            CompactIconButton(WorkspaceIcon.Add, "Create project", onNewProject)
+            CompactIconButton(
+                icon = WorkspaceIcon.Add,
+                description = "Create project",
+                onClick = onNewProject
+            )
         }
-        Text("Choose a manuscript", style = WorkspaceType.PreviewTitle, modifier = Modifier.padding(top = 10.dp, bottom = 18.dp))
+        Text(
+            text = "Choose a manuscript",
+            style = WorkspaceType.PreviewTitle,
+            modifier = Modifier.padding(top = 10.dp, bottom = 18.dp)
+        )
         Hairline()
         if (projects.isEmpty()) {
             Column(
@@ -153,19 +129,41 @@ private fun ProjectShelf(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                NovellumIcon(WorkspaceIcon.Project, WorkspaceColors.TextMuted, Modifier.size(38.dp))
-                Text("No projects yet", style = WorkspaceType.UiStrong, modifier = Modifier.padding(top = 14.dp))
-                Text("Create a project to begin a manuscript.", style = WorkspaceType.UiSmall, modifier = Modifier.padding(top = 5.dp))
-                CompactTextButton("New project", onNewProject, Modifier.padding(top = 18.dp), selected = true, leadingIcon = WorkspaceIcon.Add)
+                NovellumIcon(
+                    WorkspaceIcon.Project,
+                    WorkspaceColors.TextMuted,
+                    Modifier.size(38.dp)
+                )
+                Text(
+                    "No projects yet",
+                    style = WorkspaceType.UiStrong,
+                    modifier = Modifier.padding(top = 14.dp)
+                )
+                Text(
+                    "Create a project to begin a manuscript.",
+                    style = WorkspaceType.UiSmall,
+                    modifier = Modifier.padding(top = 5.dp)
+                )
+                CompactTextButton(
+                    label = "New project",
+                    leadingIcon = WorkspaceIcon.Add,
+                    selected = true,
+                    onClick = onNewProject,
+                    modifier = Modifier.padding(top = 18.dp)
+                )
             }
         } else {
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
-                contentPadding = PaddingValues(vertical = 12.dp)
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp)
             ) {
                 items(projects, key = { it.id }) { project ->
-                    ProjectShelfRow(project, onClick = { onProjectSelected(project.id) })
+                    ProjectShelfRow(
+                        project = project,
+                        onClick = { onProjectSelected(project.id) },
+                        onEdit = { onEditProject(project) }
+                    )
                 }
             }
         }
@@ -174,23 +172,50 @@ private fun ProjectShelf(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ProjectShelfRow(project: ProjectEntity, onClick: () -> Unit) {
+private fun ProjectShelfRow(
+    project: ProjectEntity,
+    onClick: () -> Unit,
+    onEdit: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
             .background(WorkspaceColors.Deep.copy(alpha = .64f))
-            .combinedClickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+                onLongClick = onEdit
+            )
+            .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         NovellumIcon(WorkspaceIcon.Project, WorkspaceColors.Accent, Modifier.size(20.dp))
-        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-            Text(project.title, style = WorkspaceType.UiStrong, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+            Text(
+                project.title,
+                style = WorkspaceType.UiStrong,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             if (project.description.isNotBlank()) {
-                Text(project.description, style = WorkspaceType.UiSmall.copy(color = WorkspaceColors.TextMuted), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    project.description,
+                    style = WorkspaceType.UiSmall.copy(color = WorkspaceColors.TextMuted),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
+        CompactIconButton(
+            icon = WorkspaceIcon.More,
+            description = "Edit ${project.title}",
+            onClick = onEdit,
+            size = 30.dp,
+            iconSize = 15.dp
+        )
     }
 }
 
@@ -209,22 +234,15 @@ private fun ManuscriptTree(
     onChapterSelected: (String) -> Unit,
     onSceneSelected: (String) -> Unit,
     onToggleChapter: (String) -> Unit,
-    onRenameProject: (String, String) -> Unit,
-    onRenameChapter: (String, String) -> Unit,
-    onRenameScene: (String, String) -> Unit,
-    onDeleteProject: (String) -> Unit,
-    onDeleteChapter: (String) -> Unit,
-    onDeleteScene: (String) -> Unit,
+    onEditProject: (ProjectEntity) -> Unit,
+    onEditChapter: (ChapterEntity) -> Unit,
+    onEditScene: (SceneEntity) -> Unit,
     onBackup: () -> Unit,
     onExport: () -> Unit,
     onUnavailableAction: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var query by remember(selectedProject.id) { mutableStateOf("") }
-    var managingKey by remember(selectedProject.id) { mutableStateOf<String?>(null) }
-    var deleteRequest by remember(selectedProject.id) { mutableStateOf<TreeDeleteRequest?>(null) }
-
-    val sortedChapters = remember(chapters) { chapters.sortedBy { it.orderIndex } }
     val sceneMatches = remember(query, scenes) {
         if (query.isBlank()) scenes.mapTo(mutableSetOf()) { it.id }
         else scenes.filter { it.title.contains(query, ignoreCase = true) }.mapTo(mutableSetOf()) { it.id }
@@ -232,70 +250,64 @@ private fun ManuscriptTree(
     val chapterMatches = remember(query, chapters, scenes) {
         if (query.isBlank()) chapters.mapTo(mutableSetOf()) { it.id }
         else chapters.filter { chapter ->
-            chapter.title.contains(query, ignoreCase = true) || scenes.any { it.chapterId == chapter.id && it.id in sceneMatches }
+            chapter.title.contains(query, ignoreCase = true) ||
+                scenes.any { it.chapterId == chapter.id && it.id in sceneMatches }
         }.mapTo(mutableSetOf()) { it.id }
     }
 
     Column(modifier) {
-        Column(Modifier.padding(start = 18.dp, end = 14.dp, top = 18.dp)) {
+        Column(Modifier.padding(start = 18.dp, end = 14.dp, top = 20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("MANUSCRIPT", style = WorkspaceType.Eyebrow, modifier = Modifier.weight(1f))
-                CompactIconButton(WorkspaceIcon.Add, "Add chapter", onNewChapter, size = 31.dp, iconSize = 16.dp)
-            }
-            Text("PROJECT", style = WorkspaceType.Eyebrow, modifier = Modifier.padding(top = 10.dp))
-            val projectKey = "project-${selectedProject.id}"
-            if (managingKey == projectKey) {
-                InlineTitleManager(
-                    initialTitle = selectedProject.title,
-                    accent = true,
-                    onSave = {
-                        onRenameProject(selectedProject.id, it)
-                        managingKey = null
-                    },
-                    onCancel = { managingKey = null },
-                    onDelete = {
-                        if (chapters.isEmpty()) {
-                            onDeleteProject(selectedProject.id)
-                            managingKey = null
-                        } else {
-                            deleteRequest = TreeDeleteRequest.Project(
-                                selectedProject,
-                                chapters.size,
-                                scenes.size,
-                                scenes.sumOf { wordCount(it.prose) }
-                            )
-                        }
-                    },
-                    modifier = Modifier.padding(top = 3.dp)
+                CompactIconButton(
+                    icon = WorkspaceIcon.Add,
+                    description = "Add chapter",
+                    onClick = onNewChapter,
+                    size = 31.dp,
+                    iconSize = 16.dp
                 )
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
-                        .combinedClickable(
-                            onClick = onShowProjectList,
-                            onLongClick = { managingKey = projectKey }
-                        )
-                        .padding(vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        selectedProject.title,
-                        style = WorkspaceType.UiStrong.copy(color = WorkspaceColors.AccentBright, fontSize = 16.sp),
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                CompactIconButton(
+                    icon = WorkspaceIcon.More,
+                    description = "Edit project",
+                    onClick = { onEditProject(selectedProject) },
+                    size = 31.dp,
+                    iconSize = 16.dp
+                )
+            }
+            Text("PROJECT", style = WorkspaceType.Eyebrow, modifier = Modifier.padding(top = 12.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
+                    .combinedClickable(
+                        onClick = onShowProjectList,
+                        onLongClick = { onEditProject(selectedProject) }
                     )
-                    NovellumIcon(WorkspaceIcon.ChevronDown, WorkspaceColors.TextSecondary, Modifier.size(16.dp))
-                }
+                    .padding(vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    selectedProject.title,
+                    style = WorkspaceType.UiStrong.copy(
+                        color = WorkspaceColors.AccentBright,
+                        fontSize = 17.sp
+                    ),
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                NovellumIcon(
+                    WorkspaceIcon.ChevronDown,
+                    WorkspaceColors.TextSecondary,
+                    Modifier.size(16.dp)
+                )
             }
             SearchShell(
                 value = query,
                 placeholder = "Search manuscript…",
                 onValueChange = { query = it },
                 onFilter = { onUnavailableAction("Manuscript filters") },
-                modifier = Modifier.padding(top = 12.dp, bottom = 10.dp)
+                modifier = Modifier.padding(top = 13.dp, bottom = 12.dp)
             )
         }
 
@@ -303,78 +315,41 @@ private fun ManuscriptTree(
 
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentPadding = PaddingValues(start = 9.dp, end = 9.dp, top = 8.dp, bottom = 10.dp)
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                start = 10.dp,
+                end = 10.dp,
+                top = 10.dp,
+                bottom = 12.dp
+            )
         ) {
-            sortedChapters.forEachIndexed { chapterIndex, chapter ->
-                if (chapter.id !in chapterMatches) return@forEachIndexed
-                val chapterPosition = chapterIndex + 1
-                val chapterKey = "chapter-${chapter.id}"
-                item(key = chapterKey) {
-                    ChapterTreeRow(
-                        chapter = chapter,
-                        position = chapterPosition,
-                        selected = chapter.id == selectedChapterId && selectedSceneId == null,
-                        expanded = chapter.id in expandedChapterIds,
-                        managing = managingKey == chapterKey,
-                        onToggle = { onToggleChapter(chapter.id) },
-                        onSelect = { onChapterSelected(chapter.id) },
-                        onAddScene = { onNewScene(chapter.id) },
-                        onManage = { managingKey = chapterKey },
-                        onSaveTitle = {
-                            onRenameChapter(chapter.id, normalizeStoredTitle(it, "Chapter", chapterPosition))
-                            managingKey = null
-                        },
-                        onCancelManage = { managingKey = null },
-                        onDelete = {
-                            val children = scenes.filter { it.chapterId == chapter.id }
-                            if (children.isEmpty()) {
-                                onDeleteChapter(chapter.id)
-                                managingKey = null
-                            } else {
-                                deleteRequest = TreeDeleteRequest.Chapter(chapter, children.size, children.sumOf { wordCount(it.prose) })
-                            }
-                        }
-                    )
-                }
-
-                val allChapterScenes = scenes.filter { it.chapterId == chapter.id }.sortedBy { it.orderIndex }
-                val visibleScenes = allChapterScenes.filter { it.id in sceneMatches }
-                item(key = "children-${chapter.id}") {
-                    AnimatedVisibility(
-                        visible = chapter.id in expandedChapterIds,
-                        enter = expandVertically(animationSpec = spring(stiffness = 430f, dampingRatio = .86f)) + fadeIn(),
-                        exit = shrinkVertically(animationSpec = spring(stiffness = 500f, dampingRatio = .9f)) + fadeOut()
-                    ) {
-                        Column {
-                            visibleScenes.forEach { scene ->
-                                val scenePosition = allChapterScenes.indexOfFirst { it.id == scene.id } + 1
-                                val sceneKey = "scene-${scene.id}"
-                                SceneTreeRow(
-                                    scene = scene,
-                                    position = scenePosition,
-                                    selected = scene.id == selectedSceneId,
-                                    managing = managingKey == sceneKey,
-                                    onSelect = { onSceneSelected(scene.id) },
-                                    onManage = { managingKey = sceneKey },
-                                    onSaveTitle = {
-                                        onRenameScene(scene.id, normalizeStoredTitle(it, "Scene", scenePosition))
-                                        managingKey = null
-                                    },
-                                    onCancelManage = { managingKey = null },
-                                    onDelete = {
-                                        if (scene.prose.isBlank()) {
-                                            onDeleteScene(scene.id)
-                                            managingKey = null
-                                        } else {
-                                            deleteRequest = TreeDeleteRequest.Scene(scene)
-                                        }
-                                    }
-                                )
-                            }
+            chapters.sortedBy { it.orderIndex }
+                .filter { it.id in chapterMatches }
+                .forEach { chapter ->
+                    item(key = "chapter-${chapter.id}") {
+                        ChapterTreeRow(
+                            chapter = chapter,
+                            selected = chapter.id == selectedChapterId && selectedSceneId == null,
+                            expanded = chapter.id in expandedChapterIds,
+                            onToggle = { onToggleChapter(chapter.id) },
+                            onSelect = { onChapterSelected(chapter.id) },
+                            onAddScene = { onNewScene(chapter.id) },
+                            onEdit = { onEditChapter(chapter) }
+                        )
+                    }
+                    if (chapter.id in expandedChapterIds) {
+                        val chapterScenes = scenes
+                            .filter { it.chapterId == chapter.id && it.id in sceneMatches }
+                            .sortedBy { it.orderIndex }
+                        items(chapterScenes, key = { "scene-${it.id}" }) { scene ->
+                            SceneTreeRow(
+                                scene = scene,
+                                selected = scene.id == selectedSceneId,
+                                onSelect = { onSceneSelected(scene.id) },
+                                onEdit = { onEditScene(scene) }
+                            )
                         }
                     }
                 }
-            }
 
             if (chapters.isEmpty()) {
                 item("empty-manuscript") {
@@ -382,9 +357,23 @@ private fun ManuscriptTree(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        NovellumIcon(WorkspaceIcon.Folder, WorkspaceColors.TextMuted, Modifier.size(32.dp))
-                        Text("This manuscript has no chapters.", style = WorkspaceType.UiSmall, modifier = Modifier.padding(top = 10.dp))
-                        CompactTextButton("Add chapter", onNewChapter, Modifier.padding(top = 12.dp), selected = true, leadingIcon = WorkspaceIcon.Add)
+                        NovellumIcon(
+                            WorkspaceIcon.Folder,
+                            WorkspaceColors.TextMuted,
+                            Modifier.size(32.dp)
+                        )
+                        Text(
+                            "This manuscript has no chapters.",
+                            style = WorkspaceType.UiSmall,
+                            modifier = Modifier.padding(top = 10.dp)
+                        )
+                        CompactTextButton(
+                            label = "Add chapter",
+                            leadingIcon = WorkspaceIcon.Add,
+                            selected = true,
+                            onClick = onNewChapter,
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
                     }
                 }
             }
@@ -400,107 +389,70 @@ private fun ManuscriptTree(
             onExport = onExport
         )
     }
-
-    deleteRequest?.let { target ->
-        when (target) {
-            is TreeDeleteRequest.Scene -> {
-                    HoldDeleteDialog(
-                        title = displaySceneTitle(target.entity.title, 1),
-                        detail = "This scene contains about ${wordCount(target.entity.prose)} words. Press and hold the delete control to move it through Novellum’s safe removal path.",
-                        onDismiss = { deleteRequest = null },
-                        onConfirm = {
-                            onDeleteScene(target.entity.id)
-                            deleteRequest = null
-                            managingKey = null
-                        }
-                    )
-            }
-            is TreeDeleteRequest.Chapter -> {
-                    TypeDeleteDialog(
-                        heading = "Remove chapter?",
-                        detail = "This chapter contains ${target.sceneCount} scene${if (target.sceneCount == 1) "" else "s"} and about ${target.words} words. Type DELETE to enable safe removal.",
-                        onDismiss = { deleteRequest = null },
-                        onConfirm = {
-                            onDeleteChapter(target.entity.id)
-                            deleteRequest = null
-                            managingKey = null
-                        }
-                    )
-            }
-            is TreeDeleteRequest.Project -> {
-                    TypeDeleteDialog(
-                        heading = "Remove project?",
-                        detail = "This project contains ${target.chapterCount} chapter${if (target.chapterCount == 1) "" else "s"}, ${target.sceneCount} scene${if (target.sceneCount == 1) "" else "s"}, and about ${target.words} words. Type DELETE to enable safe removal.",
-                        onDismiss = { deleteRequest = null },
-                        onConfirm = {
-                            onDeleteProject(target.entity.id)
-                            deleteRequest = null
-                            managingKey = null
-                        }
-                    )
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ChapterTreeRow(
     chapter: ChapterEntity,
-    position: Int,
     selected: Boolean,
     expanded: Boolean,
-    managing: Boolean,
     onToggle: () -> Unit,
     onSelect: () -> Unit,
     onAddScene: () -> Unit,
-    onManage: () -> Unit,
-    onSaveTitle: (String) -> Unit,
-    onCancelManage: () -> Unit,
-    onDelete: () -> Unit
+    onEdit: () -> Unit
 ) {
-    val selectedBg by animateColorAsState(
-        if (selected) WorkspaceColors.AccentWash else Color.Transparent,
-        spring(stiffness = 420f, dampingRatio = .88f),
-        label = "chapterSelection"
-    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(38.dp)
+            .height(40.dp)
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
-            .background(selectedBg)
-            .combinedClickable(onClick = onSelect, onLongClick = onManage)
+            .background(if (selected) WorkspaceColors.AccentWash else Color.Transparent)
+            .combinedClickable(onClick = onSelect, onLongClick = onEdit)
             .padding(start = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(Modifier.width(2.dp).height(19.dp).background(if (selected) WorkspaceColors.Accent else Color.Transparent))
+        Box(
+            modifier = Modifier
+                .width(2.dp)
+                .height(20.dp)
+                .background(if (selected) WorkspaceColors.Accent else Color.Transparent)
+        )
         CompactIconButton(
-            if (expanded) WorkspaceIcon.ChevronDown else WorkspaceIcon.ChevronRight,
-            if (expanded) "Collapse ${chapter.title}" else "Expand ${chapter.title}",
-            onToggle,
+            icon = if (expanded) WorkspaceIcon.ChevronDown else WorkspaceIcon.ChevronRight,
+            description = if (expanded) "Collapse ${chapter.title}" else "Expand ${chapter.title}",
+            onClick = onToggle,
             size = 27.dp,
             iconSize = 13.dp
         )
-        NovellumIcon(WorkspaceIcon.Folder, if (selected) WorkspaceColors.Accent else WorkspaceColors.TextSecondary, Modifier.size(17.dp))
-        if (managing) {
-            InlineTitleManager(
-                initialTitle = editableDisplayTitle(chapter.title, "Chapter", position),
-                onSave = onSaveTitle,
-                onCancel = onCancelManage,
-                onDelete = onDelete,
-                modifier = Modifier.weight(1f).padding(start = 7.dp)
-            )
-        } else {
-            Text(
-                displayChapterTitle(chapter.title, position),
-                style = WorkspaceType.UiStrong.copy(color = if (selected) WorkspaceColors.AccentBright else WorkspaceColors.TextPrimary),
-                modifier = Modifier.weight(1f).padding(start = 8.dp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            CompactIconButton(WorkspaceIcon.Add, "Add scene to ${chapter.title}", onAddScene, size = 28.dp, iconSize = 14.dp)
-        }
+        NovellumIcon(
+            WorkspaceIcon.Folder,
+            if (selected) WorkspaceColors.Accent else WorkspaceColors.TextSecondary,
+            Modifier.size(18.dp)
+        )
+        Text(
+            chapter.title,
+            style = WorkspaceType.UiStrong.copy(
+                color = if (selected) WorkspaceColors.AccentBright else WorkspaceColors.TextPrimary
+            ),
+            modifier = Modifier.weight(1f).padding(start = 9.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        CompactIconButton(
+            icon = WorkspaceIcon.Add,
+            description = "Add scene to ${chapter.title}",
+            onClick = onAddScene,
+            size = 28.dp,
+            iconSize = 14.dp
+        )
+        CompactIconButton(
+            icon = WorkspaceIcon.More,
+            description = "Edit ${chapter.title}",
+            onClick = onEdit,
+            size = 28.dp,
+            iconSize = 14.dp
+        )
     }
 }
 
@@ -508,171 +460,63 @@ private fun ChapterTreeRow(
 @Composable
 private fun SceneTreeRow(
     scene: SceneEntity,
-    position: Int,
     selected: Boolean,
-    managing: Boolean,
     onSelect: () -> Unit,
-    onManage: () -> Unit,
-    onSaveTitle: (String) -> Unit,
-    onCancelManage: () -> Unit,
-    onDelete: () -> Unit
+    onEdit: () -> Unit
 ) {
-    val selectedBg by animateColorAsState(
-        if (selected) WorkspaceColors.AccentWash else Color.Transparent,
-        spring(stiffness = 420f, dampingRatio = .88f),
-        label = "sceneSelection"
-    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(37.dp)
-            .padding(start = 31.dp)
+            .height(39.dp)
+            .padding(start = 32.dp)
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
-            .background(selectedBg)
-            .combinedClickable(onClick = onSelect, onLongClick = onManage),
+            .background(if (selected) WorkspaceColors.AccentWash else Color.Transparent)
+            .combinedClickable(onClick = onSelect, onLongClick = onEdit),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            Modifier.width(2.dp).height(if (selected) 22.dp else 37.dp)
-                .background(if (selected) WorkspaceColors.Accent else WorkspaceColors.Hairline.copy(alpha = .72f))
+            modifier = Modifier
+                .width(2.dp)
+                .height(if (selected) 23.dp else 39.dp)
+                .background(
+                    if (selected) WorkspaceColors.Accent
+                    else WorkspaceColors.Hairline.copy(alpha = .75f)
+                )
         )
-        NovellumIcon(WorkspaceIcon.Document, if (selected) WorkspaceColors.Accent else WorkspaceColors.TextMuted, Modifier.padding(start = 9.dp).size(16.dp))
-        if (managing) {
-            InlineTitleManager(
-                initialTitle = editableDisplayTitle(scene.title, "Scene", position),
-                onSave = onSaveTitle,
-                onCancel = onCancelManage,
-                onDelete = onDelete,
-                modifier = Modifier.weight(1f).padding(start = 7.dp)
+        NovellumIcon(
+            WorkspaceIcon.Document,
+            if (selected) WorkspaceColors.Accent else WorkspaceColors.TextMuted,
+            Modifier.padding(start = 10.dp).size(17.dp)
+        )
+        Text(
+            scene.title,
+            style = WorkspaceType.Ui.copy(
+                color = if (selected) WorkspaceColors.AccentBright else WorkspaceColors.TextSecondary,
+                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
+            ),
+            modifier = Modifier.weight(1f).padding(start = 9.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .padding(end = 7.dp)
+                    .size(7.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(WorkspaceColors.Accent)
             )
         } else {
-            Text(
-                displaySceneTitle(scene.title, position),
-                style = WorkspaceType.Ui.copy(
-                    color = if (selected) WorkspaceColors.AccentBright else WorkspaceColors.TextSecondary,
-                    fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
-                ),
-                modifier = Modifier.weight(1f).padding(start = 8.dp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            CompactIconButton(
+                icon = WorkspaceIcon.More,
+                description = "Edit ${scene.title}",
+                onClick = onEdit,
+                size = 28.dp,
+                iconSize = 14.dp
             )
-            if (selected) {
-                Box(Modifier.padding(end = 10.dp).size(6.dp).clip(RoundedCornerShape(50)).background(WorkspaceColors.Accent))
-            }
         }
     }
 }
-
-@Composable
-private fun InlineTitleManager(
-    initialTitle: String,
-    onSave: (String) -> Unit,
-    onCancel: () -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier,
-    accent: Boolean = false
-) {
-    var value by remember(initialTitle) { mutableStateOf(initialTitle) }
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        BasicTextField(
-            value = value,
-            onValueChange = { value = it },
-            singleLine = true,
-            cursorBrush = SolidColor(WorkspaceColors.Accent),
-            textStyle = WorkspaceType.UiStrong.copy(color = if (accent) WorkspaceColors.AccentBright else WorkspaceColors.TextPrimary),
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(7.dp))
-                .background(WorkspaceColors.Deep.copy(alpha = .72f))
-                .padding(horizontal = 8.dp, vertical = 5.dp)
-        )
-        CompactIconButton(WorkspaceIcon.Check, "Save title", { value.trim().takeIf { it.isNotEmpty() }?.let(onSave) }, size = 28.dp, iconSize = 14.dp, selected = true)
-        CompactIconButton(WorkspaceIcon.Delete, "Delete", onDelete, size = 28.dp, iconSize = 14.dp)
-        CompactIconButton(WorkspaceIcon.Close, "Cancel management", onCancel, size = 28.dp, iconSize = 14.dp)
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun HoldDeleteDialog(
-    title: String,
-    detail: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = WorkspaceColors.PanelRaised,
-        title = { Text("Remove scene?", style = WorkspaceType.UiStrong.copy(fontSize = 16.sp)) },
-        text = { Text(detail, style = WorkspaceType.Ui.copy(color = WorkspaceColors.TextSecondary)) },
-        confirmButton = {
-            Text(
-                "PRESS & HOLD DELETE",
-                style = WorkspaceType.UiSmall.copy(color = WorkspaceColors.Danger, fontWeight = FontWeight.SemiBold),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
-                    .background(WorkspaceColors.Danger.copy(alpha = .07f))
-                    .combinedClickable(onClick = {}, onLongClick = onConfirm)
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
-            )
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Keep $title", color = WorkspaceColors.TextSecondary) } }
-    )
-}
-
-@Composable
-private fun TypeDeleteDialog(
-    heading: String,
-    detail: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    var typed by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = WorkspaceColors.PanelRaised,
-        title = { Text(heading, style = WorkspaceType.UiStrong.copy(fontSize = 16.sp)) },
-        text = {
-            Column {
-                Text(detail, style = WorkspaceType.Ui.copy(color = WorkspaceColors.TextSecondary))
-                BasicTextField(
-                    value = typed,
-                    onValueChange = { typed = it },
-                    singleLine = true,
-                    cursorBrush = SolidColor(WorkspaceColors.Danger),
-                    textStyle = WorkspaceType.UiStrong.copy(color = WorkspaceColors.TextPrimary),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 14.dp)
-                        .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
-                        .background(WorkspaceColors.Deep)
-                        .padding(horizontal = 12.dp, vertical = 10.dp)
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(enabled = typed == "DELETE", onClick = onConfirm) {
-                Text("Delete", color = if (typed == "DELETE") WorkspaceColors.Danger else WorkspaceColors.TextMuted)
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = WorkspaceColors.TextSecondary) } }
-    )
-}
-
-private fun displayChapterTitle(raw: String, position: Int): String =
-    if (isDefaultTitle(raw, "Chapter")) "Chapter $position" else "Ch $position · ${raw.trim()}"
-
-private fun displaySceneTitle(raw: String, position: Int): String =
-    if (isDefaultTitle(raw, "Scene")) "Scene $position" else "Sc $position · ${raw.trim()}"
-
-private fun editableDisplayTitle(raw: String, kind: String, position: Int): String =
-    if (isDefaultTitle(raw, kind)) "$kind $position" else raw.trim()
-
-private fun normalizeStoredTitle(value: String, kind: String, position: Int): String =
-    if (value.trim().equals("$kind $position", ignoreCase = true)) kind else value.trim()
-
-private fun isDefaultTitle(raw: String, kind: String): Boolean =
-    raw.trim().matches(Regex("(?i)^${kind}(?:\\s+\\d+)?$"))
 
 @Composable
 private fun ManuscriptFooter(
@@ -685,7 +529,10 @@ private fun ManuscriptFooter(
     onExport: () -> Unit
 ) {
     Hairline()
-    Row(Modifier.fillMaxWidth().height(62.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.fillMaxWidth().height(64.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         StatCell("WORDS", words.toString(), Modifier.weight(1f))
         VerticalHairline()
         StatCell("SCENES", sceneCount.toString(), Modifier.weight(1f))
@@ -694,7 +541,7 @@ private fun ManuscriptFooter(
     }
     Hairline()
     Row(
-        modifier = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 6.dp),
+        modifier = Modifier.fillMaxWidth().height(72.dp).padding(horizontal = 6.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -709,19 +556,31 @@ private fun ManuscriptFooter(
 private fun StatCell(label: String, value: String, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = WorkspaceType.Eyebrow.copy(letterSpacing = .6.sp))
-        Text(value, style = WorkspaceType.UiStrong.copy(color = WorkspaceColors.Accent, fontSize = 16.sp), modifier = Modifier.padding(top = 3.dp))
+        Text(
+            value,
+            style = WorkspaceType.UiStrong.copy(color = WorkspaceColors.Accent, fontSize = 17.sp),
+            modifier = Modifier.padding(top = 3.dp)
+        )
     }
 }
 
 @Composable
 private fun VerticalHairline() {
-    Spacer(Modifier.width(1.dp).height(34.dp).background(WorkspaceColors.Hairline.copy(alpha = .68f)))
+    Spacer(
+        Modifier
+            .width(1.dp)
+            .height(36.dp)
+            .background(WorkspaceColors.Hairline.copy(alpha = .68f))
+    )
 }
 
 @Composable
 private fun FooterAction(label: String, icon: WorkspaceIcon, onClick: () -> Unit) {
-    Column(Modifier.widthIn(min = 48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        CompactIconButton(icon, label, onClick, size = 32.dp, iconSize = 18.dp)
+    Column(
+        modifier = Modifier.widthIn(min = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CompactIconButton(icon, label, onClick, size = 32.dp, iconSize = 19.dp)
         Text(label, style = WorkspaceType.UiSmall.copy(color = WorkspaceColors.TextMuted))
     }
 }

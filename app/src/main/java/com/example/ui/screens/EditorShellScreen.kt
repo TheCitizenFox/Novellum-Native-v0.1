@@ -3,14 +3,6 @@ package com.example.ui.screens
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -237,7 +229,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                             rightPanelOpen = true
                             if (!wideLayout) leftPanelOpen = false
                         }
-                        WorkspaceMode.Cards -> unavailable("Structure")
+                        WorkspaceMode.Cards -> unavailable("Cards / Structure")
                     }
                 },
                 onToggleLeftPanel = {
@@ -261,13 +253,8 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                             bottom = WorkspaceMetrics.OuterPadding
                         )
                 ) {
-                    AnimatedVisibility(
-                        visible = leftPanelOpen,
-                        enter = expandHorizontally(animationSpec = spring(stiffness = 410f, dampingRatio = .88f)) + fadeIn(),
-                        exit = shrinkHorizontally(animationSpec = spring(stiffness = 470f, dampingRatio = .9f)) + fadeOut()
-                    ) {
-                        Row {
-                            ManuscriptSidebar(
+                    if (leftPanelOpen) {
+                        ManuscriptSidebar(
                             projects = projects,
                             selectedProject = selectedProject,
                             chapters = chapters,
@@ -279,10 +266,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                             onShowProjectList = viewModel::clearProjectSelection,
                             onNewProject = viewModel::createNextProject,
                             onNewChapter = viewModel::createNextChapter,
-                            onNewScene = { chapterId ->
-                                expandedChapterIds = expandedChapterIds + chapterId
-                                viewModel.createNextScene(chapterId)
-                            },
+                            onNewScene = viewModel::createNextScene,
                             onChapterSelected = { chapterId ->
                                 previewChapterId = chapterId
                                 activeMode = WorkspaceMode.Manuscript
@@ -301,19 +285,15 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                                     expandedChapterIds - chapterId
                                 } else expandedChapterIds + chapterId
                             },
-                            onRenameProject = viewModel::renameProject,
-                            onRenameChapter = viewModel::renameChapter,
-                            onRenameScene = viewModel::renameScene,
-                            onDeleteProject = viewModel::deleteProject,
-                            onDeleteChapter = viewModel::deleteChapter,
-                            onDeleteScene = viewModel::deleteScene,
+                            onEditProject = { editTarget = EditTarget.Project(it) },
+                            onEditChapter = { editTarget = EditTarget.Chapter(it) },
+                            onEditScene = { editTarget = EditTarget.Scene(it) },
                             onBackup = ::requestBackup,
                             onExport = ::requestMarkdownExport,
                             onUnavailableAction = ::unavailable,
                             modifier = Modifier.width(WorkspaceMetrics.LeftPanelWidth)
-                            )
-                            Spacer(Modifier.width(WorkspaceMetrics.PanelGap))
-                        }
+                        )
+                        Spacer(Modifier.width(WorkspaceMetrics.PanelGap))
                     }
 
                     WritingWorkspace(
@@ -338,14 +318,9 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                         modifier = Modifier.weight(1f)
                     )
 
-                    AnimatedVisibility(
-                        visible = rightPanelOpen,
-                        enter = expandHorizontally(expandFrom = Alignment.End, animationSpec = spring(stiffness = 410f, dampingRatio = .88f)) + fadeIn(),
-                        exit = shrinkHorizontally(shrinkTowards = Alignment.End, animationSpec = spring(stiffness = 470f, dampingRatio = .9f)) + fadeOut()
-                    ) {
-                        Row {
-                            Spacer(Modifier.width(WorkspaceMetrics.PanelGap))
-                            AuxiliaryWorkspace(
+                    if (rightPanelOpen) {
+                        Spacer(Modifier.width(WorkspaceMetrics.PanelGap))
+                        AuxiliaryWorkspace(
                             selectedTab = auxiliaryTab,
                             selectedProject = selectedProject,
                             selectedChapter = currentChapter,
@@ -360,8 +335,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                             },
                             onUnavailableAction = ::unavailable,
                             modifier = Modifier.width(WorkspaceMetrics.RightPanelWidth)
-                            )
-                        }
+                        )
                     }
                 }
             } else {
@@ -404,12 +378,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                         )
                     }
 
-                    AnimatedVisibility(
-                        visible = leftPanelOpen,
-                        enter = slideInHorizontally(initialOffsetX = { -it }, animationSpec = spring(stiffness = 400f, dampingRatio = .88f)) + fadeIn(),
-                        exit = slideOutHorizontally(targetOffsetX = { -it }, animationSpec = spring(stiffness = 470f, dampingRatio = .9f)) + fadeOut(),
-                        modifier = Modifier.align(Alignment.CenterStart)
-                    ) {
+                    if (leftPanelOpen) {
                         ManuscriptSidebar(
                             projects = projects,
                             selectedProject = selectedProject,
@@ -422,10 +391,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                             onShowProjectList = viewModel::clearProjectSelection,
                             onNewProject = viewModel::createNextProject,
                             onNewChapter = viewModel::createNextChapter,
-                            onNewScene = { chapterId ->
-                                expandedChapterIds = expandedChapterIds + chapterId
-                                viewModel.createNextScene(chapterId)
-                            },
+                            onNewScene = viewModel::createNextScene,
                             onChapterSelected = { chapterId ->
                                 previewChapterId = chapterId
                                 activeMode = WorkspaceMode.Manuscript
@@ -443,16 +409,14 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                                     expandedChapterIds - chapterId
                                 } else expandedChapterIds + chapterId
                             },
-                            onRenameProject = viewModel::renameProject,
-                            onRenameChapter = viewModel::renameChapter,
-                            onRenameScene = viewModel::renameScene,
-                            onDeleteProject = viewModel::deleteProject,
-                            onDeleteChapter = viewModel::deleteChapter,
-                            onDeleteScene = viewModel::deleteScene,
+                            onEditProject = { editTarget = EditTarget.Project(it) },
+                            onEditChapter = { editTarget = EditTarget.Chapter(it) },
+                            onEditScene = { editTarget = EditTarget.Scene(it) },
                             onBackup = ::requestBackup,
                             onExport = ::requestMarkdownExport,
                             onUnavailableAction = ::unavailable,
                             modifier = Modifier
+                                .align(Alignment.CenterStart)
                                 .fillMaxHeight()
                                 .width(WorkspaceMetrics.OverlayPanelWidth)
                                 .shadow(24.dp, RoundedCornerShape(WorkspaceMetrics.PanelRadius))
@@ -460,12 +424,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                         )
                     }
 
-                    AnimatedVisibility(
-                        visible = rightPanelOpen,
-                        enter = slideInHorizontally(initialOffsetX = { it }, animationSpec = spring(stiffness = 400f, dampingRatio = .88f)) + fadeIn(),
-                        exit = slideOutHorizontally(targetOffsetX = { it }, animationSpec = spring(stiffness = 470f, dampingRatio = .9f)) + fadeOut(),
-                        modifier = Modifier.align(Alignment.CenterEnd)
-                    ) {
+                    if (rightPanelOpen) {
                         AuxiliaryWorkspace(
                             selectedTab = auxiliaryTab,
                             selectedProject = selectedProject,
@@ -474,6 +433,7 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                             onTabSelected = { auxiliaryTab = it },
                             onUnavailableAction = ::unavailable,
                             modifier = Modifier
+                                .align(Alignment.CenterEnd)
                                 .fillMaxHeight()
                                 .width(WorkspaceMetrics.OverlayPanelWidth)
                                 .shadow(24.dp, RoundedCornerShape(WorkspaceMetrics.PanelRadius))

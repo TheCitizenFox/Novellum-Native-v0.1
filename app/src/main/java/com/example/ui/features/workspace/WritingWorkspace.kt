@@ -1,9 +1,5 @@
 package com.example.ui.features.workspace
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -79,42 +74,31 @@ internal fun WritingWorkspace(
     modifier: Modifier = Modifier
 ) {
     PanelSurface(modifier = modifier.fillMaxHeight()) {
-        val contentKey = when {
-            currentScene != null -> "scene:${currentScene.id}"
-            previewChapter != null -> "chapter:${previewChapter.id}"
-            else -> "empty:${selectedProject?.id.orEmpty()}"
-        }
-        Crossfade(
-            targetState = contentKey,
-            animationSpec = tween(durationMillis = 190),
-            label = "writingWorkspaceContent"
-        ) { key ->
-            when {
-                key.startsWith("scene:") && currentScene != null -> SceneEditor(
-                    scene = currentScene,
-                    saveState = saveState,
-                    lastSavedTime = lastSavedTime,
-                    onSyncScene = onSyncScene,
-                    onProseChanged = onProseChanged,
-                    onSaveNow = onSaveNow,
-                    onConfirmIntentionalClear = onConfirmIntentionalClear,
-                    onEditScene = { onEditScene(currentScene) },
-                    onUnavailableAction = onUnavailableAction,
-                    modifier = Modifier.fillMaxSize()
-                )
-                key.startsWith("chapter:") && previewChapter != null -> ChapterPreview(
-                    chapter = previewChapter,
-                    scenes = previewScenes,
-                    onSelectScene = onSelectScene,
-                    modifier = Modifier.fillMaxSize()
-                )
-                else -> EmptyWritingWorkspace(
-                    hasProject = selectedProject != null,
-                    projectTitle = selectedProject?.title,
-                    onCreateChapter = onCreateChapter,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+        when {
+            currentScene != null -> SceneEditor(
+                scene = currentScene,
+                saveState = saveState,
+                lastSavedTime = lastSavedTime,
+                onSyncScene = onSyncScene,
+                onProseChanged = onProseChanged,
+                onSaveNow = onSaveNow,
+                onConfirmIntentionalClear = onConfirmIntentionalClear,
+                onEditScene = { onEditScene(currentScene) },
+                onUnavailableAction = onUnavailableAction,
+                modifier = Modifier.fillMaxSize()
+            )
+            previewChapter != null -> ChapterPreview(
+                chapter = previewChapter,
+                scenes = previewScenes,
+                onSelectScene = onSelectScene,
+                modifier = Modifier.fillMaxSize()
+            )
+            else -> EmptyWritingWorkspace(
+                hasProject = selectedProject != null,
+                projectTitle = selectedProject?.title,
+                onCreateChapter = onCreateChapter,
+                modifier = Modifier.fillMaxSize()
+            )
         }
     }
 }
@@ -300,7 +284,7 @@ private fun SaveStatus(
     lastSavedTime: Long?,
     onClick: () -> Unit
 ) {
-    val (label, targetColor) = when (saveState) {
+    val (label, color) = when (saveState) {
         SaveState.SAVED -> {
             val time = lastSavedTime?.let {
                 DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(it))
@@ -311,11 +295,6 @@ private fun SaveStatus(
         SaveState.AUTOSAVING -> "Saving…" to WorkspaceColors.Accent
         SaveState.BLOCKED_EMPTY_CLEAR -> "Empty overwrite blocked" to WorkspaceColors.Danger
     }
-    val color by animateColorAsState(
-        targetValue = targetColor,
-        animationSpec = spring(stiffness = 430f, dampingRatio = .86f),
-        label = "saveStateColor"
-    )
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
@@ -540,7 +519,7 @@ private fun ChapterPreview(
                     ),
                     verticalArrangement = Arrangement.spacedBy(26.dp)
                 ) {
-                    itemsIndexed(scenes.sortedBy { it.orderIndex }, key = { _, scene -> scene.id }) { index, scene ->
+                    items(scenes.sortedBy { it.orderIndex }, key = { it.id }) { scene ->
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -554,67 +533,24 @@ private fun ChapterPreview(
                                     style = WorkspaceType.UiSmall.copy(color = WorkspaceColors.TextMuted)
                                 )
                             }
-                            if (scene.prose.isBlank()) {
-                                Text(
-                                    "Empty scene",
-                                    style = WorkspaceType.Manuscript.copy(color = WorkspaceColors.TextMuted),
-                                    modifier = Modifier.padding(top = 16.dp)
-                                )
-                            } else {
-                                ChapterSceneProse(
-                                    prose = scene.prose,
-                                    dropCap = index == 0,
-                                    modifier = Modifier.padding(top = 16.dp)
-                                )
-                            }
+                            Text(
+                                text = scene.prose
+                                    .trimStart('\n', '\r')
+                                    .ifBlank { "Empty scene" },
+                                style = WorkspaceType.Manuscript.copy(
+                                    color = if (scene.prose.isBlank()) {
+                                        WorkspaceColors.TextMuted
+                                    } else {
+                                        WorkspaceColors.ManuscriptText
+                                    }
+                                ),
+                                modifier = Modifier.padding(top = 16.dp)
+                            )
                             Hairline(Modifier.padding(top = 22.dp))
                         }
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun ChapterSceneProse(
-    prose: String,
-    dropCap: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val normalized = prose.trimStart('\n', '\r')
-    if (!dropCap || normalized.isEmpty()) {
-        Text(normalized, style = WorkspaceType.Manuscript, modifier = modifier)
-        return
-    }
-
-    val paragraphs = normalized.split(Regex("\n\s*\n"))
-    val first = paragraphs.firstOrNull().orEmpty()
-    val letterIndex = first.indexOfFirst { it.isLetterOrDigit() }.coerceAtLeast(0)
-    val leading = first.take(letterIndex)
-    val drop = first.getOrNull(letterIndex)?.toString().orEmpty()
-    val remainder = leading + first.drop(letterIndex + drop.length)
-
-    Column(modifier) {
-        if (drop.isNotEmpty()) {
-            Row(verticalAlignment = Alignment.Top) {
-                Text(
-                    drop,
-                    style = WorkspaceType.Manuscript.copy(
-                        fontSize = 62.sp,
-                        lineHeight = 58.sp,
-                        color = WorkspaceColors.Accent,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Normal
-                    ),
-                    modifier = Modifier.padding(end = 9.dp)
-                )
-                Text(remainder, style = WorkspaceType.Manuscript, modifier = Modifier.weight(1f))
-            }
-        } else {
-            Text(first, style = WorkspaceType.Manuscript)
-        }
-        paragraphs.drop(1).forEach { paragraph ->
-            Text(paragraph, style = WorkspaceType.Manuscript, modifier = Modifier.padding(top = 18.dp))
         }
     }
 }

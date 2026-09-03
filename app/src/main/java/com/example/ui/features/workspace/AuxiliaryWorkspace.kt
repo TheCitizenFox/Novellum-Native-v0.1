@@ -1,9 +1,5 @@
 package com.example.ui.features.workspace
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -124,42 +120,35 @@ private fun AuxiliaryLibraryPanel(
                 iconSize = 18.dp
             )
         }
-        Crossfade(
-            targetState = selectedTab,
-            animationSpec = tween(180),
-            label = "auxiliaryTabContent",
-            modifier = Modifier.weight(1f).fillMaxWidth()
-        ) { tab ->
-            Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                AuxiliaryEmptyGlyph(tab)
-                Text(
-                    text = "Your ${tab.label.lowercase()} is ready.",
-                    style = WorkspaceType.UiStrong,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 18.dp)
-                )
-                Text(
-                    text = when (tab) {
-                        AuxiliaryTab.Vault -> "Capture fragments, research, and durable story material here."
-                        AuxiliaryTab.Library -> "Reference material will remain close to the manuscript."
-                        AuxiliaryTab.Notes -> "Keep scene-specific thinking beside the draft."
-                    },
-                    style = WorkspaceType.UiSmall.copy(color = WorkspaceColors.TextMuted),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 6.dp)
-                )
-                CompactTextButton(
-                    label = "New entry",
-                    leadingIcon = WorkspaceIcon.Add,
-                    outlined = true,
-                    onClick = { onUnavailableAction("New ${tab.label} entry") },
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-            }
+        Column(
+            modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 22.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AuxiliaryEmptyGlyph(selectedTab)
+            Text(
+                text = "Your ${selectedTab.label.lowercase()} is ready.",
+                style = WorkspaceType.UiStrong,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 18.dp)
+            )
+            Text(
+                text = when (selectedTab) {
+                    AuxiliaryTab.Vault -> "Capture fragments, research, and durable story material here."
+                    AuxiliaryTab.Library -> "Reference material will remain close to the manuscript."
+                    AuxiliaryTab.Notes -> "Keep scene-specific thinking beside the draft."
+                },
+                style = WorkspaceType.UiSmall.copy(color = WorkspaceColors.TextMuted),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 6.dp)
+            )
+            CompactTextButton(
+                label = "New entry",
+                leadingIcon = WorkspaceIcon.Add,
+                outlined = true,
+                onClick = { onUnavailableAction("New ${selectedTab.label} entry") },
+                modifier = Modifier.padding(top = 16.dp)
+            )
         }
     }
 }
@@ -235,11 +224,7 @@ private fun AuxiliaryTabButton(
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val color by animateColorAsState(
-        targetValue = if (selected) WorkspaceColors.AccentBright else WorkspaceColors.TextSecondary,
-        animationSpec = spring(stiffness = 430f, dampingRatio = .86f),
-        label = "auxTabTint"
-    )
+    val color = if (selected) WorkspaceColors.AccentBright else WorkspaceColors.TextSecondary
     Box(
         modifier = modifier
             .fillMaxHeight()

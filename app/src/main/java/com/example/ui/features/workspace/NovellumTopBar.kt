@@ -61,7 +61,7 @@ internal fun NovellumTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            modifier = Modifier.width(if (showBrandText) 290.dp else 56.dp),
+            modifier = Modifier.width(if (showBrandText) WorkspaceMetrics.LeftPanelWidth else 56.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             NovellumIcon(
@@ -158,18 +158,16 @@ private fun TopModeButton(
             .padding(horizontal = if (showLabel) 10.dp else 8.dp),
         contentAlignment = Alignment.Center
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            NovellumIcon(mode.icon, tint, Modifier.size(18.dp))
-            if (showLabel) {
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = mode.label,
-                    style = WorkspaceType.Ui.copy(
-                        color = tint,
-                        fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
-                    )
+        if (showLabel) {
+            Text(
+                text = mode.label,
+                style = WorkspaceType.Ui.copy(
+                    color = tint,
+                    fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
                 )
-            }
+            )
+        } else {
+            NovellumIcon(mode.icon, tint, Modifier.size(18.dp))
         }
         AnimatedVisibility(
             visible = selected,

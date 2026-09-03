@@ -237,12 +237,8 @@ private fun ManuscriptTree(
     }
 
     Column(modifier) {
-        Column(Modifier.padding(start = 18.dp, end = 14.dp, top = 18.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("MANUSCRIPT", style = WorkspaceType.Eyebrow, modifier = Modifier.weight(1f))
-                CompactIconButton(WorkspaceIcon.Add, "Add chapter", onNewChapter, size = 31.dp, iconSize = 16.dp)
-            }
-            Text("PROJECT", style = WorkspaceType.Eyebrow, modifier = Modifier.padding(top = 10.dp))
+        Column(Modifier.padding(start = 18.dp, end = 14.dp, top = 20.dp, bottom = 12.dp)) {
+            Text("PROJECT", style = WorkspaceType.Eyebrow)
             val projectKey = "project-${selectedProject.id}"
             if (managingKey == projectKey) {
                 InlineTitleManager(
@@ -266,7 +262,7 @@ private fun ManuscriptTree(
                             )
                         }
                     },
-                    modifier = Modifier.padding(top = 3.dp)
+                    modifier = Modifier.padding(top = 5.dp)
                 )
             } else {
                 Row(
@@ -277,29 +273,30 @@ private fun ManuscriptTree(
                             onClick = onShowProjectList,
                             onLongClick = { managingKey = projectKey }
                         )
-                        .padding(vertical = 6.dp),
+                        .padding(top = 5.dp, bottom = 7.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         selectedProject.title,
-                        style = WorkspaceType.UiStrong.copy(color = WorkspaceColors.AccentBright, fontSize = 16.sp),
+                        style = WorkspaceType.UiStrong.copy(color = WorkspaceColors.AccentBright, fontSize = 15.sp),
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    NovellumIcon(WorkspaceIcon.ChevronDown, WorkspaceColors.TextSecondary, Modifier.size(16.dp))
+                    NovellumIcon(WorkspaceIcon.ChevronDown, WorkspaceColors.TextSecondary, Modifier.size(15.dp))
                 }
             }
-            SearchShell(
-                value = query,
-                placeholder = "Search manuscript…",
-                onValueChange = { query = it },
-                onFilter = { onUnavailableAction("Manuscript filters") },
-                modifier = Modifier.padding(top = 12.dp, bottom = 10.dp)
-            )
         }
 
         Hairline()
+
+        Row(
+            modifier = Modifier.fillMaxWidth().height(58.dp).padding(start = 18.dp, end = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("MANUSCRIPT", style = WorkspaceType.Eyebrow, modifier = Modifier.weight(1f))
+            CompactIconButton(WorkspaceIcon.Add, "Add chapter", onNewChapter, size = 30.dp, iconSize = 15.dp)
+        }
 
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -390,12 +387,16 @@ private fun ManuscriptTree(
             }
         }
 
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+            SearchShell(
+                value = query,
+                placeholder = "Search manuscript",
+                onValueChange = { query = it },
+                onFilter = { onUnavailableAction("Manuscript filters") }
+            )
+        }
         ManuscriptFooter(
-            chapterCount = chapters.size,
-            sceneCount = scenes.size,
             words = scenes.sumOf { wordCount(it.prose) },
-            onSearch = { onUnavailableAction("Expanded search") },
-            onStats = { onUnavailableAction("Manuscript statistics") },
             onBackup = onBackup,
             onExport = onExport
         )
@@ -676,32 +677,26 @@ private fun isDefaultTitle(raw: String, kind: String): Boolean =
 
 @Composable
 private fun ManuscriptFooter(
-    chapterCount: Int,
-    sceneCount: Int,
     words: Int,
-    onSearch: () -> Unit,
-    onStats: () -> Unit,
     onBackup: () -> Unit,
     onExport: () -> Unit
 ) {
     Hairline()
-    Row(Modifier.fillMaxWidth().height(62.dp), verticalAlignment = Alignment.CenterVertically) {
-        StatCell("WORDS", words.toString(), Modifier.weight(1f))
-        VerticalHairline()
-        StatCell("SCENES", sceneCount.toString(), Modifier.weight(1f))
-        VerticalHairline()
-        StatCell("CHAPTERS", chapterCount.toString(), Modifier.weight(1f))
-    }
-    Hairline()
     Row(
-        modifier = Modifier.fillMaxWidth().height(68.dp).padding(horizontal = 6.dp),
-        horizontalArrangement = Arrangement.SpaceAround,
+        modifier = Modifier.fillMaxWidth().height(74.dp).padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        FooterAction("Search", WorkspaceIcon.Search, onSearch)
-        FooterAction("Stats", WorkspaceIcon.Stats, onStats)
-        FooterAction("Backup", WorkspaceIcon.Backup, onBackup)
-        FooterAction("Export", WorkspaceIcon.Export, onExport)
+        Column(Modifier.weight(1f)) {
+            Text("WORDS", style = WorkspaceType.Eyebrow.copy(letterSpacing = .7.sp))
+            Text(
+                words.toString(),
+                style = WorkspaceType.UiStrong.copy(color = WorkspaceColors.Accent, fontSize = 16.sp),
+                modifier = Modifier.padding(top = 3.dp)
+            )
+        }
+        CompactIconButton(WorkspaceIcon.Backup, "Backup", onBackup, size = 34.dp, iconSize = 17.dp)
+        Spacer(Modifier.width(4.dp))
+        CompactIconButton(WorkspaceIcon.Export, "Export", onExport, size = 34.dp, iconSize = 17.dp)
     }
 }
 

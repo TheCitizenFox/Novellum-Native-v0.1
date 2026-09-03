@@ -349,16 +349,10 @@ private fun EditorToolbar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .clip(RoundedCornerShape(WorkspaceMetrics.ControlRadius))
-            .background(WorkspaceColors.PanelSoft.copy(alpha = .74f))
-            .border(
-                .75.dp,
-                WorkspaceColors.HairlineBright.copy(alpha = .62f),
-                RoundedCornerShape(WorkspaceMetrics.ControlRadius)
-            )
+            .height(46.dp)
+            .background(Color.Transparent)
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 7.dp),
+            .padding(horizontal = 3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ToolbarLetterButton("B", toolbarLetterStyle, "Bold", onBold)
@@ -447,9 +441,7 @@ private fun ManuscriptTextField(
         Box(
             modifier = modifier
                 .widthIn(max = 760.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(WorkspaceColors.Editor.copy(alpha = .55f))
-                .padding(horizontal = 22.dp, vertical = 19.dp)
+                .padding(horizontal = 18.dp, vertical = 14.dp)
         ) {
             if (value.text.isEmpty()) {
                 Text(

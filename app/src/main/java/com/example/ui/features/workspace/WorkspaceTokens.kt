@@ -8,19 +8,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 internal object WorkspaceColors {
-    val Void = Color(0xFF060A0D)
-    val Deep = Color(0xFF090F13)
-    val Panel = Color(0xFF0B1216)
-    val PanelRaised = Color(0xFF10181D)
-    val PanelHighlight = Color(0xFF151E23)
-    val PanelSoft = Color(0xFF121B20)
-    val Editor = Color(0xFF090F13)
+    val Void = Color(0xFF07090B)
+    val Deep = Color(0xFF0A0D0F)
+    val Panel = Color(0xFF0E1113)
+    val PanelRaised = Color(0xFF121619)
+    val PanelHighlight = Color(0xFF171B1E)
+    val PanelSoft = Color(0xFF111518)
+    val Editor = Color(0xFF0A0D0F)
     val Accent = Color(0xFFE98A3E)
     val AccentBright = Color(0xFFF1A064)
     val AccentMuted = Color(0xFF5A321C)
     val AccentWash = Color(0x14E98A3E)
     val TextPrimary = Color(0xFFD8D3CC)
-    val ManuscriptText = Color(0xFFCDC7BF)
+    val ManuscriptText = Color(0xFFC3BDB6)
     val TextSecondary = Color(0xFF979A99)
     val TextMuted = Color(0xFF71787B)
     val Hairline = Color(0xFF1E292F)
@@ -85,10 +85,10 @@ internal object WorkspaceType {
 
     val Manuscript = TextStyle(
         fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 18.5.sp,
-        lineHeight = 30.5.sp,
-        letterSpacing = 0.1.sp,
+        fontWeight = FontWeight.Light,
+        fontSize = 16.25.sp,
+        lineHeight = 27.sp,
+        letterSpacing = 0.12.sp,
         color = WorkspaceColors.ManuscriptText
     )
 

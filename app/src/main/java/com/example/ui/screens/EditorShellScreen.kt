@@ -404,9 +404,10 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                         )
                     }
 
-                    AnimatedOverlayPanel(
+                    AnimatedVisibility(
                         visible = leftPanelOpen,
-                        fromStart = true,
+                        enter = slideInHorizontally(initialOffsetX = { -it }, animationSpec = spring(stiffness = 400f, dampingRatio = .88f)) + fadeIn(),
+                        exit = slideOutHorizontally(targetOffsetX = { -it }, animationSpec = spring(stiffness = 470f, dampingRatio = .9f)) + fadeOut(),
                         modifier = Modifier.align(Alignment.CenterStart)
                     ) {
                         ManuscriptSidebar(
@@ -459,9 +460,10 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                         )
                     }
 
-                    AnimatedOverlayPanel(
+                    AnimatedVisibility(
                         visible = rightPanelOpen,
-                        fromStart = false,
+                        enter = slideInHorizontally(initialOffsetX = { it }, animationSpec = spring(stiffness = 400f, dampingRatio = .88f)) + fadeIn(),
+                        exit = slideOutHorizontally(targetOffsetX = { it }, animationSpec = spring(stiffness = 470f, dampingRatio = .9f)) + fadeOut(),
                         modifier = Modifier.align(Alignment.CenterEnd)
                     ) {
                         AuxiliaryWorkspace(
@@ -526,29 +528,6 @@ fun EditorShellScreen(viewModel: EditorViewModel) {
                 }
             }
         )
-    }
-}
-
-@Composable
-private fun AnimatedOverlayPanel(
-    visible: Boolean,
-    fromStart: Boolean,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = slideInHorizontally(
-            initialOffsetX = { width -> if (fromStart) -width else width },
-            animationSpec = spring(stiffness = 400f, dampingRatio = .88f)
-        ) + fadeIn(),
-        exit = slideOutHorizontally(
-            targetOffsetX = { width -> if (fromStart) -width else width },
-            animationSpec = spring(stiffness = 470f, dampingRatio = .9f)
-        ) + fadeOut(),
-        modifier = modifier
-    ) {
-        content()
     }
 }
 

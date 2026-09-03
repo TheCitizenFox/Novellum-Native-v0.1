@@ -588,7 +588,7 @@ private fun ChapterSceneProse(
         return
     }
 
-    val paragraphs = normalized.split(Regex("\\n\\s*\\n"))
+    val paragraphs = normalized.split(Regex("\n\s*\n"))
     val first = paragraphs.firstOrNull().orEmpty()
     val letterIndex = first.indexOfFirst { it.isLetterOrDigit() }.coerceAtLeast(0)
     val leading = first.take(letterIndex)

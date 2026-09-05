@@ -6,75 +6,47 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// The donor project references EB Garamond and Plus Jakarta Sans conceptually.
-// The clean production app does not bundle external font files, so the native
-// serif/sans families preserve offline operation and avoid introducing a new
-// runtime or licensing dependency during the visual transplant.
-val ManuscriptSerif = FontFamily.Serif
-val UiSans = FontFamily.SansSerif
-
 val Typography = Typography(
-    displayLarge = TextStyle(
-        fontFamily = ManuscriptSerif,
-        fontWeight = FontWeight.Light,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
-        letterSpacing = 0.04.sp
-    ),
-    displayMedium = TextStyle(
-        fontFamily = ManuscriptSerif,
-        fontWeight = FontWeight.Light,
-        fontSize = 26.sp,
-        lineHeight = 34.sp,
-        letterSpacing = 0.03.sp
-    ),
     headlineMedium = TextStyle(
-        fontFamily = ManuscriptSerif,
-        fontWeight = FontWeight.Light,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.01.sp
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        lineHeight = 32.sp,
+        letterSpacing = 0.sp
+    ),
+    titleLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.15.sp
     ),
     titleMedium = TextStyle(
-        fontFamily = ManuscriptSerif,
+        fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
-        fontSize = 17.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.01.sp
+        fontSize = 15.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
     ),
     bodyLarge = TextStyle(
-        fontFamily = ManuscriptSerif,
-        fontWeight = FontWeight.Light,
-        fontSize = 17.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.012.sp
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 19.sp,
+        lineHeight = 30.sp,
+        letterSpacing = 0.3.sp
     ),
     bodyMedium = TextStyle(
-        fontFamily = UiSans,
-        fontWeight = FontWeight.Light,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-        letterSpacing = 0.01.sp
-    ),
-    labelLarge = TextStyle(
-        fontFamily = UiSans,
-        fontWeight = FontWeight.Light,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-        letterSpacing = 0.01.sp
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.25.sp
     ),
     labelMedium = TextStyle(
-        fontFamily = UiSans,
+        fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
-        fontSize = 10.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 0.12.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = UiSans,
-        fontWeight = FontWeight.Light,
-        fontSize = 11.sp,
-        lineHeight = 15.sp,
-        letterSpacing = 0.02.sp
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
     )
 )

@@ -49,15 +49,15 @@ internal fun PanelSurface(
             .clip(RoundedCornerShape(WorkspaceMetrics.PanelRadius))
             .background(
                 Brush.verticalGradient(
-                    0f to WorkspaceColors.PanelHighlight,
-                    .14f to WorkspaceColors.PanelRaised,
-                    .62f to WorkspaceColors.Panel,
+                    0f to WorkspaceColors.PanelHighlight.copy(alpha = .78f),
+                    .10f to WorkspaceColors.PanelRaised,
+                    .58f to WorkspaceColors.Panel,
                     1f to WorkspaceColors.Deep
                 )
             )
             .border(
                 width = .75.dp,
-                color = WorkspaceColors.HairlineBright.copy(alpha = .58f),
+                color = WorkspaceColors.HairlineBright.copy(alpha = .50f),
                 shape = RoundedCornerShape(WorkspaceMetrics.PanelRadius)
             )
     ) {

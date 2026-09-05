@@ -5,11 +5,12 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 
 private val NovellumColorScheme =
   darkColorScheme(
     primary = IgniteOrange,
-    onPrimary = TextPrimary,
+    onPrimary = Color(0xFF4F2500),
     secondary = MutedGrayPanel,
     onSecondary = TextPrimary,
     tertiary = DividerGray,

@@ -27,7 +27,7 @@ internal enum class WorkspaceMode(
     val icon: WorkspaceIcon
 ) {
     Editor("Editor", WorkspaceIcon.Editor),
-    Cards("Cards", WorkspaceIcon.Cards),
+    Cards("Structure", WorkspaceIcon.Cards),
     Vault("Vault", WorkspaceIcon.Vault),
     Library("Library", WorkspaceIcon.Library),
     Manuscript("Manuscript", WorkspaceIcon.Manuscript)

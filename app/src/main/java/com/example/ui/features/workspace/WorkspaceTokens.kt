@@ -19,9 +19,9 @@ internal object WorkspaceColors {
     val AccentBright = Color(0xFFF1A064)
     val AccentMuted = Color(0xFF5A321C)
     val AccentWash = Color(0x14E98A3E)
-    val TextPrimary = Color(0xFFD8D3CC)
-    val ManuscriptText = Color(0xFFC3BDB6)
-    val TextSecondary = Color(0xFF979A99)
+    val TextPrimary = Color(0xFFE2DED7)
+    val ManuscriptText = Color(0xFFD5D0C8)
+    val TextSecondary = Color(0xFFA7A19C)
     val TextMuted = Color(0xFF71787B)
     val Hairline = Color(0xFF1E292F)
     val HairlineBright = Color(0xFF29363D)
@@ -34,12 +34,13 @@ internal object WorkspaceColors {
 internal object WorkspaceMetrics {
     val OuterPadding = 10.dp
     val PanelGap = 10.dp
-    val PanelRadius = 14.dp
+    val PanelRadius = 12.dp
     val ControlRadius = 9.dp
     val TopBarHeight = 62.dp
-    val LeftPanelWidth = 278.dp
+    val LeftPanelWidth = 280.dp
     val RightPanelWidth = 300.dp
     val OverlayPanelWidth = 306.dp
+    val ReadingMaxWidth = 760.dp
 }
 
 internal object WorkspaceType {

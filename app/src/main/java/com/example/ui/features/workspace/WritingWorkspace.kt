@@ -425,9 +425,9 @@ private fun ManuscriptTextField(
     CompositionLocalProvider(LocalTextSelectionColors provides selectionColors) {
         Box(
             modifier = modifier
-                .widthIn(max = 760.dp)
+                .widthIn(max = WorkspaceMetrics.ReadingMaxWidth)
                 .clip(RoundedCornerShape(11.dp))
-                .background(WorkspaceColors.Editor.copy(alpha = .55f))
+                .background(WorkspaceColors.Editor.copy(alpha = .42f))
                 .padding(horizontal = 22.dp, vertical = 19.dp)
         ) {
             if (value.text.isEmpty()) {
@@ -523,7 +523,7 @@ private fun ChapterPreview(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .widthIn(max = 760.dp)
+                                .widthIn(max = WorkspaceMetrics.ReadingMaxWidth)
                                 .clickable { onSelectScene(scene.id) }
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
